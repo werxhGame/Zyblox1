@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1824">
+<title>Zyblox 2004 Classic</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#e8ecf0;color:#1a1a2a}
+input,textarea,select,button{font-size:16px;font-family:inherit}
+#loading-screen{position:fixed;inset:0;background:#0a0d14;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;transition:opacity .6s ease}
+#loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+#custom-icon{width:100px;height:100px;background:#cc2222;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 0 40px rgba(204,34,34,.3);animation:pulse-icon 1.5s ease-in-out infinite}
+#custom-icon svg{width:60px;height:60px;fill:#fff}
+@keyframes pulse-icon{0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(204,34,34,.3)}50%{transform:scale(1.05);box-shadow:0 0 60px rgba(204,34,34,.5)}}
+.loader-text{color:#8899aa;font-size:13px;letter-spacing:2px;margin-top:4px}
+.loader-bar{width:200px;height:4px;background:#1a2a3a;border-radius:4px;margin-top:14px;overflow:hidden}
+.loader-bar-fill{height:100%;width:0;background:#cc2222;border-radius:4px;transition:width .3s ease}
+#loading-status{color:#556677;font-size:12px;margin-top:10px;min-height:20px}
+#auth-screen{display:none;position:fixed;inset:0;background:#0a0d14;justify-content:center;align-items:center;z-index:9998;padding:20px;overflow-y:auto}
+#auth-screen.show{display:flex}
+.auth-box{background:#111a26;border:1px solid #1e2d40;border-radius:16px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 0 60px rgba(0,0,0,.5);margin:auto}
+.auth-box .auth-icon{width:56px;height:56px;background:#cc2222;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.auth-box .auth-icon svg{width:32px;height:32px;fill:#fff}
+.auth-box h2{color:#e0e8f0;text-align:center;font-size:19px;font-weight:700;margin-bottom:2px}
+.auth-box .subtitle{color:#667788;text-align:center;font-size:12px;margin-bottom:16px}
+.auth-box label{color:#8899aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-top:10px;margin-bottom:3px}
+.auth-box input{width:100%;padding:11px 14px;background:#0a121e;border:1px solid #1a2a3a;border-radius:8px;color:#e0e8f0;outline:none}
+.auth-box input:focus{border-color:#cc2222}
+.auth-box .auth-btn{width:100%;padding:12px;background:#cc2222;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px}
+.auth-box .auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-box .auth-switch{color:#667788;font-size:13px;text-align:center;margin-top:10px}
+.auth-box .auth-switch span{color:#cc2222;cursor:pointer;font-weight:700}
+.auth-box .error-msg{color:#ff4444;font-size:12px;margin-top:8px;text-align:center;display:none}
+.auth-box .error-msg.show{display:block}
+#ban-screen{display:none;position:fixed;inset:0;background:#0a0d14;z-index:10000;padding:16px;overflow-y:auto;justify-content:center;align-items:flex-start}
+#ban-screen.show{display:flex;animation:glitch-bg 3s infinite}
+#ban-screen::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ff0055,#00e5ff,transparent);animation:glitch-scan 4s linear infinite;pointer-events:none;z-index:1}
+#ban-screen::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,0,85,.03) 0px,rgba(255,0,85,.03) 2px,transparent 2px,transparent 4px);pointer-events:none;z-index:0}
+@keyframes glitch-bg{0%,100%{background:#0a0d14}49%{background:#1a0505}50%{background:#0a0d14}93%{background:#150308}94%{background:#0a0d14}}
+@keyframes glitch-title{0%,90%,100%{transform:translate(0,0)}91%{transform:translate(-3px,1px);text-shadow:3px 0 #00e5ff,-3px 0 #ff0055}92%{transform:translate(2px,-1px);text-shadow:-2px 0 #00e5ff,2px 0 #ff0055}93%{transform:translate(-1px,2px)}94%{transform:translate(0,0)}}
+@keyframes glitch-scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes red-pulse{0%,100%{box-shadow:0 0 40px rgba(204,34,34,.2);border-color:#cc2222}50%{box-shadow:0 0 60px rgba(204,34,34,.4);border-color:#ff3333}}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.ban-box{background:#111a26;border:2px solid #cc2222;border-radius:14px;padding:24px 16px;width:100%;max-width:420px;text-align:center;animation:red-pulse 2s infinite;position:relative;z-index:2;margin:auto}
+.ban-box h2{color:#cc2222;font-size:19px;font-weight:900;margin-bottom:4px;animation:glitch-title 4s infinite}
+.ban-box .ban-icon{font-size:40px;margin-bottom:10px}
+.ban-box .ban-sub{color:#667788;font-size:12px;margin-bottom:14px}
+.ban-box .ban-reason{background:#0a121e;padding:10px 14px;border-radius:8px;color:#e0e8f0;font-size:13px;margin-bottom:10px;border-left:3px solid #cc2222;text-align:left}
+.ban-box .ban-reason strong{color:#8899aa;display:block;font-size:10px;text-transform:uppercase;margin-bottom:2px}
+.ban-box .ban-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.ban-box .ban-info-item{background:#0a121e;padding:8px 10px;border-radius:8px;text-align:center}
+.ban-box .ban-info-item .label{font-size:9px;color:#556677;text-transform:uppercase}
+.ban-box .ban-info-item .value{font-size:14px;font-weight:700;color:#e0e8f0;margin-top:2px}
+.ban-box .ban-info-item .value.time{color:#ffd93d}
+.ban-box .ban-info-item .value.nick{color:#6effb0}
+.ban-timer-box{background:#0a121e;border:1px solid #2a1a1a;border-radius:10px;padding:12px;margin-top:12px;text-align:center}
+.ban-timer-label{font-size:10px;color:#8899aa;text-transform:uppercase;margin-bottom:6px}
+.ban-timer-value{font-family:'Courier New',monospace;font-weight:900;color:#ff4444;display:flex;justify-content:center;gap:3px;flex-wrap:wrap;align-items:center}
+.ban-timer-value .unit{display:inline-flex;flex-direction:column;align-items:center;min-width:40px}
+.ban-timer-value .unit .num{font-size:22px;line-height:1;text-shadow:0 0 12px rgba(255,68,68,.5)}
+.ban-timer-value .unit .lbl{font-size:9px;color:#8899aa;margin-top:3px;font-weight:700}
+.ban-timer-value .sep{color:#445566;font-size:20px;padding:0 2px}
+.appeal-toggle-btn{margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#1a2a3a,#0f1824);border:1px solid #445566;border-radius:10px;color:#e0e8f0;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.appeal-form{display:none;margin-top:12px;background:#0a121e;border:1px solid #1a2a3a;border-radius:12px;padding:14px;text-align:left}
+.appeal-form.show{display:block}
+.appeal-form label{display:block;color:#8899aa;font-size:11px;text-transform:uppercase;margin-bottom:4px}
+.appeal-form textarea{width:100%;padding:10px 12px;background:#060b14;border:1px solid #1a2a3a;border-radius:8px;color:#e0e8f0;font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:90px}
+.screenshot-upload{margin-top:10px}
+.screenshot-drop{border:2px dashed #2a3a4a;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:#060b14;color:#667788;font-size:12px}
+.screenshot-drop .icon{font-size:26px;display:block;margin-bottom:6px}
+.screenshot-preview{display:none;margin-top:10px;position:relative;border-radius:8px;overflow:hidden;border:1px solid #2a3a4a}
+.screenshot-preview.show{display:block}
+.screenshot-preview img{width:100%;max-height:160px;object-fit:cover;display:block}
+.screenshot-remove{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(204,34,34,.9);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.admin-response-box{display:none;background:linear-gradient(135deg,#0a1a10,#0a1a20);border:1px solid #6bcb77;border-radius:12px;padding:14px;margin-top:12px;text-align:left}
+.admin-response-box.show{display:block}
+.admin-response-box.rejected{background:linear-gradient(135deg,#1a0a0a,#1a0a10);border-color:#cc2222}
+.admin-response-header{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:8px;color:#6bcb77}
+.admin-response-box.rejected .admin-response-header{color:#ff6666}
+.admin-response-text{color:#e0e8f0;font-size:13px;line-height:1.6;background:rgba(0,0,0,.3);padding:10px 12px;border-radius:8px;white-space:pre-wrap;word-break:break-word}
+.admin-response-meta{font-size:11px;color:#8899aa;margin-top:8px}
+.appeal-submit-btn{margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#6bcb77,#4aa857);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.appeal-success{display:none;text-align:center;padding:14px;background:#0a1a10;border:1px solid #6bcb77;border-radius:10px;color:#6bcb77;font-size:13px;font-weight:700;margin-top:12px}
+.appeal-success.show{display:block}
+.appeal-error{display:none;color:#ff4444;font-size:12px;margin-top:8px;text-align:center}
+.appeal-error.show{display:block}
+body.theme-black{background:#0a0a0a;color:#e0e0e0}
+body.theme-black #navbar{background:#000;border-color:#1a1a1a}
+body.theme-black #content,body.theme-black #sidebar{background:#141414;color:#e0e0e0}
+body.theme-black .game-card,body.theme-black .profile-header,body.theme-black .shop-item{background:#1a1a1a;color:#e0e0e0}
+body.theme-purple{background:#1a0a2e;color:#e0d8f0}
+body.theme-purple #navbar{background:#2a0a4e}
+body.theme-purple #content,body.theme-purple #sidebar{background:#240a3e;color:#e0d8f0}
+body.theme-purple .game-card,body.theme-purple .profile-header,body.theme-purple .shop-item{background:#3a1a5e;color:#e0d8f0}
+body.theme-diamond{background:#d0f0ff;color:#0a2a4a}
+body.theme-diamond #navbar{background:#a0d8f0}
+body.theme-diamond #content,body.theme-diamond #sidebar{background:#e0f5ff;color:#0a2a4a}
+body.theme-diamond .game-card,body.theme-diamond .profile-header,body.theme-diamond .shop-item{background:#f0fbff;color:#0a2a4a}
+body.theme-pink{background:#ffe0ec;color:#4a0a2a}
+body.theme-pink #navbar{background:#ff80b0}
+body.theme-pink #content,body.theme-pink #sidebar{background:#fff0f5;color:#4a0a2a}
+body.theme-pink .game-card,body.theme-pink .profile-header,body.theme-pink .shop-item{background:#fff;color:#4a0a2a}
+body.theme-red{background:#2a0a0a;color:#f0d8d8}
+body.theme-red #navbar{background:#4a0a0a}
+body.theme-red #content,body.theme-red #sidebar{background:#3e0a0a;color:#f0d8d8}
+body.theme-red .game-card,body.theme-red .profile-header,body.theme-red .shop-item{background:#5e1a1a;color:#f0d8d8}
+body.theme-white{background:#fff;color:#1a1a2a}
+body.theme-white #navbar{background:#f5f5f5}
+body.theme-white #content,body.theme-white #sidebar{background:#fafafa;color:#1a1a2a}
+body.theme-gold{background:#2a1a00;color:#ffe8a0}
+body.theme-gold #navbar{background:#4a2a00}
+body.theme-gold #content,body.theme-gold #sidebar{background:#3e2200;color:#ffe8a0}
+body.theme-gold .game-card,body.theme-gold .profile-header,body.theme-gold .shop-item{background:#5e3a00;color:#ffe8a0}
+.admin-section{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.admin-section h3{font-size:14px;color:#1a1a2a;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.admin-section .hint{font-size:12px;color:#8899aa;margin-bottom:12px}
+.admin-input{width:100%;padding:11px 14px;background:#f0f4f8;border:1px solid #d0d8e0;border-radius:8px;outline:none;margin-bottom:10px;font-family:inherit}
+.admin-btn-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.admin-coin-btn{padding:8px 12px;background:linear-gradient(135deg,#ffd93d,#ffaa00);border:none;border-radius:8px;color:#1a1a2a;font-size:12px;font-weight:700;cursor:pointer;flex:1 0 calc(33% - 6px)}
+.admin-action-btn{padding:11px 18px;background:#cc2222;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.admin-action-btn.green{background:#6bcb77}
+.ban-duration-select{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ban-duration-select select,.ban-duration-select input{padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;background:#f0f4f8;outline:none;font-family:inherit;flex:1;min-width:100px}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-top:10px}
+.theme-btn{padding:10px 4px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:10px;font-weight:700;text-align:center}
+.theme-btn.active{border-color:#cc2222}
+.admin-log{background:#0a121e;color:#6effb0;font-family:'Courier New',monospace;font-size:11px;padding:10px 12px;border-radius:8px;max-height:200px;overflow-y:auto;line-height:1.6;word-break:break-word}
+.admin-tag{display:inline-flex;align-items:center;background:linear-gradient(135deg,#ffd93d,#ffaa00);color:#1a1a2a;padding:2px 8px;border-radius:40px;font-size:9px;font-weight:900;text-transform:uppercase}
+.admin-users-list{max-height:400px;overflow-y:auto;border-radius:10px;border:1px solid #e0e6ec;background:#fafbfc}
+.admin-user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eef1f5;cursor:pointer}
+.admin-user-row.banned{background:#fff5f5}
+.admin-user-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#4d96ff,#6effb0);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a0d14}
+.admin-user-row.banned .admin-user-avatar{background:linear-gradient(135deg,#cc2222,#ff4444);color:#fff}
+.admin-user-info{flex:1;min-width:0}
+.admin-user-nick{font-size:13px;font-weight:700;color:#1a1a2a;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.admin-user-meta{font-size:11px;color:#8899aa;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.admin-user-coins{font-size:12px;font-weight:700;color:#ffd93d;background:#1a2a3a;padding:3px 8px;border-radius:40px}
+.admin-mini-tag{display:inline-block;padding:1px 6px;border-radius:40px;font-size:9px;font-weight:700;text-transform:uppercase}
+.admin-mini-tag.online{background:#6bcb77;color:#fff}
+.admin-mini-tag.offline{background:#d0d8e0;color:#556677}
+.admin-mini-tag.admin{background:linear-gradient(135deg,#ffd93d,#ffaa00);color:#1a1a2a}
+.admin-mini-tag.banned{background:#cc2222;color:#fff}
+.admin-empty{padding:20px;text-align:center;color:#8899aa;font-size:13px}
+.admin-user-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.admin-user-actions button{padding:4px 8px;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
+.admin-verify-btn{background:linear-gradient(135deg,#00a2ff,#0060c0);color:#fff}
+.admin-verify-btn.remove{background:linear-gradient(135deg,#ffaa00,#cc8800);color:#fff}
+.verified-badge{display:inline-block;width:14px;height:14px;background:#00a2ff;border-radius:3px;position:relative;margin-left:4px;vertical-align:middle;transform:rotate(-10deg);flex-shrink:0}
+.verified-badge::after{content:'';position:absolute;top:1px;left:4px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.verified-badge.small{width:11px;height:11px}
+.verified-badge.small::after{top:0;left:3px;width:3px;height:6px;border-width:0 1.5px 1.5px 0}
+#verify-acc-btn{width:100%;padding:12px;background:linear-gradient(135deg,#00a2ff,#0060c0);border:none;border-radius:8px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;font-family:inherit}
+#verify-acc-btn:disabled{background:linear-gradient(135deg,#6bcb77,#4aa857);cursor:default;opacity:.7}
+.verify-request-item{background:#fafbfc;border:1px solid #e0e6ec;border-radius:10px;padding:12px 14px;margin-bottom:8px;border-left:4px solid #00a2ff}
+.verify-request-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap}
+.verify-request-nick{font-size:14px;font-weight:700;color:#1a1a2a}
+.verify-request-time{font-size:11px;color:#8899aa}
+.verify-request-actions{display:flex;gap:6px;margin-top:8px}
+.verify-request-actions button{flex:1;padding:8px 12px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.verify-accept{background:#6bcb77;color:#fff}
+.verify-reject{background:#cc2222;color:#fff}
+.quiz-question{background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.quiz-q{color:#e0e8f0;font-size:13px;font-weight:700;margin-bottom:8px}
+.quiz-options{display:flex;flex-direction:column;gap:5px}
+.quiz-option{padding:8px 12px;background:#060b14;border:1px solid #1a2a3a;border-radius:8px;cursor:pointer;font-size:12px;color:#8899aa}
+.quiz-option.selected{background:linear-gradient(135deg,#cc2222,#ff4444);color:#fff;border-color:#cc2222}
+.verify-terms-content{background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:14px;margin:14px 0;text-align:left;max-height:220px;overflow-y:auto;color:#8899aa;font-size:12px;line-height:1.7}
+.friends-list{display:flex;flex-direction:column;gap:8px}
+.friend-item{background:#fff;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent}
+.friend-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4d96ff,#6effb0);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.friend-avatar.bot{background:linear-gradient(135deg,#ff00c8,#a000ff)}
+.friend-info{flex:1;min-width:0}
+.friend-name{font-size:14px;font-weight:700;color:#1a1a2a;display:flex;align-items:center;gap:6px}
+.friend-tag{font-size:9px;padding:2px 6px;border-radius:40px;font-weight:900;text-transform:uppercase}
+.friend-tag.support{background:#6bcb77;color:#fff}
+.friend-tag.manager{background:#ffaa00;color:#1a1a2a}
+.friend-tag.helper{background:#4d96ff;color:#fff}
+.friend-status{font-size:11px;color:#8899aa;margin-top:2px}
+.chat-msg{max-width:75%;padding:8px 12px;border-radius:12px;margin-bottom:8px;font-size:13px;line-height:1.4;word-break:break-word}
+.chat-msg.me{background:#cc2222;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.chat-msg.them{background:#fff;color:#1a1a2a;border-bottom-left-radius:4px}
+.chat-msg .time{font-size:9px;opacity:.7;margin-top:4px;display:block}
+.purchase-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);justify-content:center;align-items:center;z-index:9997;backdrop-filter:blur(6px);padding:16px;overflow-y:auto}
+.purchase-overlay.show{display:flex;animation:fadeIn .25s ease}
+.purchase-box{background:linear-gradient(160deg,#111a26,#0a121e);border:1px solid #2a4a6a;border-radius:16px;padding:22px 18px;width:100%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);animation:slideUp .3s ease;margin:auto}
+.purchase-box h3{color:#e0e8f0;font-size:17px;margin-bottom:6px}
+.purchase-box .price{color:#ffd93d;font-size:24px;font-weight:900;margin:6px 0}
+.purchase-box .desc{color:#8899aa;font-size:12px;margin-bottom:14px;line-height:1.5}
+.purchase-box .purchase-btn{padding:12px 24px;background:linear-gradient(135deg,#cc2222,#ff4444);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.purchase-box .cancel-btn{padding:12px 18px;background:transparent;border:1px solid #445566;border-radius:10px;color:#8899aa;font-size:13px;cursor:pointer;margin-left:8px;font-family:inherit}
+.spinner{width:34px;height:34px;border:4px solid #1a2a3a;border-top:4px solid #cc2222;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+.admin-response-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.admin-response-modal.show{display:flex}
+.admin-response-modal-content{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:420px}
+.admin-response-modal-content h3{font-size:16px;color:#1a1a2a;margin-bottom:4px}
+.admin-response-modal-content .sub{font-size:12px;color:#8899aa;margin-bottom:12px}
+.admin-response-modal-content textarea{width:100%;padding:10px 12px;background:#f0f4f8;border:1px solid #d0d8e0;border-radius:8px;font-size:14px;font-family:inherit;min-height:80px;outline:none}
+.admin-response-modal-buttons{display:flex;gap:8px;margin-top:12px}
+.admin-response-modal-buttons button{flex:1;padding:12px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.admin-response-modal-buttons .send{background:#6bcb77;color:#fff}
+.admin-response-modal-buttons .cancel{background:#e0e6ec;color:#445566}
+#app{display:none;height:100vh;flex-direction:column;background:#e8ecf0}
+#app.show{display:flex}
+#navbar{background:#0f1824;border-bottom:1px solid #1e2d40;display:flex;justify-content:space-between;align-items:center;min-height:52px;flex-shrink:0;gap:4px;padding:6px 8px;position:sticky;top:0;z-index:100;overflow-x:auto}
+#nav-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#nav-icon{width:28px;height:28px;background:#cc2222;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+#nav-icon svg{width:16px;height:16px;fill:#fff}
+#nav-links{display:flex;gap:3px;flex-wrap:wrap}
+.nav-link{color:#8899aa;font-size:11px;padding:5px 8px;border-radius:5px;cursor:pointer;border:none;background:transparent;font-family:inherit;font-weight:700;white-space:nowrap}
+.nav-link.active{background:#1e3a5a;color:#6effb0}
+#nav-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#nav-user{display:flex;align-items:center;gap:6px}
+#nav-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4d96ff,#6effb0);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0a0d14;flex-shrink:0}
+#nav-username{font-size:12px;color:#e0e8f0;font-weight:600}
+#nav-zycoins{background:#1a2a3a;padding:3px 10px;border-radius:40px;font-size:11px;color:#ffd93d;border:1px solid #ffd93d33;white-space:nowrap}
+.plus-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#cc2222,#ff4444);padding:2px 8px 2px 5px;border-radius:40px;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase}
+#logout-btn{background:transparent;border:1px solid #445566;color:#8899aa;border-radius:5px;padding:5px 9px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit}
+#main-content{flex:1;display:flex;overflow:hidden;background:#e8ecf0;min-height:0}
+#sidebar{width:160px;background:#f0f4f8;border-right:1px solid #d0d8e0;padding:10px 8px;overflow-y:auto;flex-shrink:0}
+.sidebar-section{margin-bottom:12px}
+.sidebar-title{font-size:9px;text-transform:uppercase;color:#8899aa;letter-spacing:1px;margin-bottom:4px}
+.sidebar-item{padding:6px 8px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;color:#445566}
+.sidebar-item.active{background:#cc2222;color:#fff}
+.sidebar-item .icon{font-size:13px}
+.sidebar-item .badge{margin-left:auto;background:#2a4a6a;padding:0 6px;border-radius:40px;font-size:9px;color:#8899aa}
+#content{flex:1;padding:14px;overflow-y:auto;overflow-x:hidden;background:#e8ecf0;width:100%;min-width:0}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.game-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;border:2px solid transparent}
+.game-card .thumb{height:70px;background:#1a2a3a;display:flex;align-items:center;justify-content:center;font-size:26px;color:#556677}
+.game-card .info{padding:8px 10px}
+.game-card .info .name{font-size:12px;font-weight:700;color:#1a1a2a}
+.game-card .info .players{font-size:10px;color:#8899aa}
+.game-card .dev-overlay{font-size:9px;color:#ff6b6b;text-align:center;padding:4px;background:#1a0a0a;font-weight:700}
+.profile-header{display:flex;align-items:center;gap:16px;background:#fff;padding:16px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4d96ff,#6effb0);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#0a0d14;flex-shrink:0;border:3px solid #cc2222}
+.profile-info{flex:1;min-width:0}
+.profile-info h2{font-size:18px;color:#1a1a2a;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.profile-info .sub{color:#667788;font-size:12px}
+.profile-info .stats{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}
+.profile-info .stats div{font-size:12px;color:#445566}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
+.shop-item{background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent}
+.shop-item .icon{font-size:28px;margin-bottom:4px}
+.shop-item .name{font-size:12px;font-weight:700;color:#1a1a2a}
+.shop-item .price{font-size:11px;color:#ffd93d;font-weight:700}
+.shop-item .buy-btn{margin-top:6px;padding:6px 12px;background:#cc2222;border:none;border-radius:40px;color:#fff;font-size:11px;cursor:pointer;width:100%;font-family:inherit;font-weight:700}
+.zycoins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.zycoin-card{background:linear-gradient(145deg,#fff,#f0f4f8);border-radius:14px;padding:14px 10px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.08);border:2px solid transparent;cursor:pointer;position:relative;overflow:hidden}
+.zycoin-card .amount{font-size:22px;font-weight:900;color:#ffd93d;margin-bottom:2px}
+.zycoin-card .coin-emoji{font-size:26px;margin-bottom:4px}
+.zycoin-card .price-rub{font-size:14px;font-weight:700;color:#1a1a2a;margin-top:4px}
+.zycoin-card .buy-coin-btn{margin-top:8px;padding:8px 14px;background:linear-gradient(135deg,#cc2222,#ff4444);border:none;border-radius:40px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;width:100%;font-family:inherit}
+.zycoin-card.best-value{border-color:#6bcb77}
+@media (max-width:768px){#sidebar{display:none}#main-content{flex-direction:column}#content{padding:12px;width:100%}.games-grid{grid-template-columns:repeat(2,1fr);gap:8px}.shop-grid{grid-template-columns:repeat(2,1fr);gap:8px}.zycoins-grid{grid-template-columns:repeat(2,1fr);gap:8px}.profile-header{flex-direction:column;text-align:center}#nav-links{order:3;width:100%;justify-content:center}#nav-right{order:2}}
+@media (max-width:480px){#nav-username{display:none}.plus-badge{display:none!important}.games-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="loading-screen">
+<div id="custom-icon"><svg viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" font-weight="900" fill="white">R</text></svg></div>
+<div class="loader-text">ZYBLOX 2004</div>
+<div class="loader-bar"><div class="loader-bar-fill"></div></div>
+<div id="loading-status">Загрузка...</div>
+</div>
+
+<div id="auth-screen">
+<div class="auth-box">
+<div class="auth-icon"><svg viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" font-weight="900" fill="white">R</text></svg></div>
+<h2 id="auth-title">Вход в Zyblox</h2>
+<div class="subtitle" id="auth-sub">Войдите в свой аккаунт</div>
+<div id="auth-error" class="error-msg"></div>
+<label for="auth-username">Имя пользователя</label>
+<input type="text" id="auth-username" placeholder="Введите ник" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="20">
+<label for="auth-password">Пароль</label>
+<input type="password" id="auth-password" placeholder="Введите пароль" maxlength="50">
+<div id="birth-date-block" style="display:none;">
+<label>Дата рождения</label>
+<div style="display:flex;gap:6px;margin-bottom:10px;">
+<input type="number" id="birth-day" placeholder="ДД" min="1" max="31" style="flex:1;padding:9px 12px;background:#0a121e;border:1px solid #1a2a3a;border-radius:8px;color:#e0e8f0;outline:none;text-align:center;">
+<input type="number" id="birth-month" placeholder="ММ" min="1" max="12" style="flex:1;padding:9px 12px;background:#0a121e;border:1px solid #1a2a3a;border-radius:8px;color:#e0e8f0;outline:none;text-align:center;">
+<input type="number" id="birth-year" placeholder="ГГГГ" min="1900" max="2026" style="flex:1.5;padding:9px 12px;background:#0a121e;border:1px solid #1a2a3a;border-radius:8px;color:#e0e8f0;outline:none;text-align:center;">
+</div>
+</div>
+<button class="auth-btn" id="auth-submit-btn">Войти</button>
+<div class="auth-switch"><span id="auth-switch-link">Нет аккаунта? Зарегистрироваться</span></div>
+</div>
+</div>
+
+<div id="ban-screen">
+<div class="ban-box">
+<div class="ban-icon">🚫</div>
+<h2>YOUR ACCOUNT HAS BEEN BANNED</h2>
+<div class="ban-sub">Ваш аккаунт был заблокирован</div>
+<div class="ban-reason"><strong>Reason:</strong><span id="ban-reason-text">Нарушение правил</span></div>
+<div class="ban-info">
+<div class="ban-info-item"><div class="label">Time:</div><div class="value time" id="ban-time-text">—</div></div>
+<div class="ban-info-item"><div class="label">Nick:</div><div class="value nick" id="ban-nick-text">—</div></div>
+</div>
+<div class="ban-timer-box" id="ban-timer-box">
+<div class="ban-timer-label">⏳ До разбана осталось</div>
+<div class="ban-timer-value" id="ban-timer-value">
+<div class="unit"><span class="num">--</span><span class="lbl">дн</span></div>
+<div class="sep">:</div>
+<div class="unit"><span class="num">--</span><span class="lbl">ч</span></div>
+<div class="sep">:</div>
+<div class="unit"><span class="num">--</span><span class="lbl">мин</span></div>
+<div class="sep">:</div>
+<div class="unit"><span class="num">--</span><span class="lbl">сек</span></div>
+</div>
+</div>
+<div class="admin-response-box" id="admin-response-box">
+<div class="admin-response-header"><span id="admin-response-icon">✅</span><span id="admin-response-title">ОТВЕТ АДМИНИСТРАЦИИ</span></div>
+<div class="admin-response-text" id="admin-response-text"></div>
+<div class="admin-response-meta" id="admin-response-meta"></div>
+</div>
+<div style="background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:12px;margin-top:12px;color:#8899aa;font-size:12px;line-height:1.6;text-align:left;">
+<strong style="color:#ff6666;">⚠️ Что делать?</strong><br>
+Разбан возможен <b style="color:#e0e8f0;">только через администрацию</b>.<br>
+Подай апелляцию ниже.
+</div>
+<button class="appeal-toggle-btn" id="appeal-toggle-btn">📝 Подать апелляцию</button>
+<div class="appeal-form" id="appeal-form">
+<label for="appeal-text">Твоё обращение</label>
+<textarea id="appeal-text" placeholder="Опиши ситуацию..." maxlength="500"></textarea>
+<div style="font-size:11px;color:#556677;margin-top:6px;text-align:right;"><span id="appeal-char-count">0</span>/500</div>
+<label style="margin-top:12px;">📎 Скриншот (необязательно)</label>
+<div class="screenshot-upload">
+<div class="screenshot-drop" id="screenshot-drop"><span class="icon">🖼️</span>Кликни или перетащи скриншот</div>
+<input type="file" id="screenshot-input" accept="image/*" style="display:none;">
+<div class="screenshot-preview" id="screenshot-preview">
+<img id="screenshot-img" alt="preview">
+<button class="screenshot-remove" id="screenshot-remove">✕</button>
+</div>
+</div>
+<button class="appeal-submit-btn" id="appeal-submit-btn">📨 Отправить апелляцию</button>
+<div class="appeal-error" id="appeal-error">❌ Напиши хотя бы 20 символов</div>
+</div>
+<div class="appeal-success" id="appeal-success">✅ Апелляция отправлена!<br><span style="color:#8899aa;font-size:12px;font-weight:400;">Администрация рассмотрит её</span></div>
+<button id="ban-logout-btn" style="margin-top:14px;width:100%;padding:12px;background:transparent;border:2px solid #445566;border-radius:10px;color:#8899aa;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:block;">🚪 Выйти из аккаунта</button>
+</div>
+</div>
+<div id="app">
+<div id="navbar">
+<div id="nav-left">
+<div id="nav-icon"><svg viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" font-weight="900" fill="white">R</text></svg></div>
+<div id="nav-links">
+<button class="nav-link active" data-page="home">Главная</button>
+<button class="nav-link" data-page="games">Игры</button>
+<button class="nav-link" data-page="profile">Профиль</button>
+<button class="nav-link" data-page="shop">Магазин</button>
+<button class="nav-link" data-page="friends">👥 Друзья</button>
+<button class="nav-link" data-page="buycoins" style="background:linear-gradient(135deg,#ffd93d,#ffaa00);color:#1a1a2a;">💰 Zycoin</button>
+<button class="nav-link" data-page="admin" id="nav-admin-btn" style="display:none;background:linear-gradient(135deg,#cc2222,#ff4444);color:#fff;">👑 Админ</button>
+</div>
+</div>
+<div id="nav-right">
+<div id="nav-user">
+<div id="nav-avatar">Z</div>
+<span id="nav-username">Zyblox</span>
+<span class="plus-badge" style="display:none;"><span class="plus-icon">+</span> PLUS</span>
+<span class="admin-tag" id="nav-admin-tag" style="display:none;">👑 Admin</span>
+</div>
+<span id="nav-zycoins">0</span>
+<button id="logout-btn">Выйти</button>
+</div>
+</div>
+
+<div id="main-content">
+<div id="sidebar">
+<div class="sidebar-section">
+<div class="sidebar-title">Навигация</div>
+<div class="sidebar-item active" data-page="home"><span class="icon">🏠</span> Главная</div>
+<div class="sidebar-item" data-page="games"><span class="icon">🎮</span> Игры</div>
+<div class="sidebar-item" data-page="profile"><span class="icon">👤</span> Профиль</div>
+<div class="sidebar-item" data-page="shop"><span class="icon">🛒</span> Магазин</div>
+<div class="sidebar-item" data-page="friends"><span class="icon">👥</span> Друзья</div>
+<div class="sidebar-item" data-page="buycoins"><span class="icon">💰</span> Купить Zycoin</div>
+<div class="sidebar-item" data-page="admin" id="sidebar-admin-item" style="display:none;"><span class="icon">👑</span> Админ-панель</div>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-title">Друзья</div>
+<div class="sidebar-item"><span class="icon">○</span> Пока никого <span class="badge">0</span></div>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-title">Мои миры</div>
+<div class="sidebar-item"><span class="icon">🌍</span> Мой мир #1</div>
+<div class="sidebar-item"><span class="icon">🌍</span> Мой мир #2</div>
+<div class="sidebar-item" style="color:#cc2222;"><span class="icon">➕</span> Создать мир</div>
+</div>
+</div>
+
+<div id="content">
+<div id="page-home" class="page-content">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">Добро пожаловать, <span style="color:#cc2222;" id="welcome-nick">Zyblox</span>!</h2>
+<p style="font-size:12px;color:#8899aa;margin-bottom:12px;">Твой игровой мир ждёт тебя.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+<div style="background:#fff;padding:10px 14px;border-radius:8px;flex:1;min-width:80px;">
+<div style="font-size:10px;color:#8899aa;">Онлайн</div>
+<div style="font-size:20px;font-weight:700;color:#1a1a2a;">0</div>
+</div>
+<div style="background:#fff;padding:10px 14px;border-radius:8px;flex:1;min-width:80px;">
+<div style="font-size:10px;color:#8899aa;">Игр</div>
+<div style="font-size:20px;font-weight:700;color:#1a1a2a;">8</div>
+</div>
+<div style="background:#fff;padding:10px 14px;border-radius:8px;flex:1;min-width:80px;">
+<div style="font-size:10px;color:#8899aa;">Zycoins</div>
+<div style="font-size:20px;font-weight:700;color:#ffd93d;" id="home-coins">0</div>
+</div>
+</div>
+<h3 style="font-size:14px;color:#1a1a2a;margin-bottom:6px;">🔥 Популярные игры</h3>
+<div class="games-grid" id="games-grid"></div>
+</div>
+
+<div id="page-games" class="page-content" style="display:none;">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">🎮 Все игры</h2>
+<p style="font-size:12px;color:#8899aa;margin-bottom:12px;">Выбери игру!</p>
+<div class="games-grid" id="games-grid-all"></div>
+</div>
+
+<div id="page-profile" class="page-content" style="display:none;">
+<div class="profile-header">
+<div class="profile-avatar" id="profile-avatar">Z</div>
+<div class="profile-info">
+<h2 id="profile-name">Zyblox</h2>
+<div class="sub">Присоединился: <strong id="profile-joined">—</strong></div>
+<div class="sub">Дата рождения: <strong id="profile-birth">—</strong></div>
+<div class="sub">Возраст: <strong id="profile-age">—</strong></div>
+<div class="stats">
+<div><strong>8</strong> игр</div>
+<div><strong>0</strong> друзей</div>
+<div><strong id="profile-coins">0</strong> Zycoins</div>
+</div>
+</div>
+</div>
+<div style="background:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-top:14px;">
+<h4 style="font-size:14px;color:#1a1a2a;margin-bottom:8px;">🔞 Возрастная верификация</h4>
+<p style="font-size:12px;color:#8899aa;margin-bottom:10px;" id="age-status">Не подтверждён</p>
+<button id="verify-age-btn" style="width:100%;padding:12px;background:linear-gradient(135deg,#cc2222,#ff4444);border:none;border-radius:8px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">ПОДТВЕРДИТЬ ВОЗРАСТ</button>
+<button id="verify-acc-btn">✅ ПОЛУЧИТЬ ВЕРИФИКАЦИЮ</button>
+</div>
+</div>
+
+<div id="page-shop" class="page-content" style="display:none;">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">🛒 Магазин</h2>
+<div class="shop-grid">
+<div class="shop-item" data-item="Красная шапка" data-price="150"><div class="icon">🧢</div><div class="name">Красная шапка</div><div class="price">150 ZC</div><button class="buy-btn">Купить</button></div>
+<div class="shop-item" data-item="Синий плащ" data-price="300"><div class="icon">🧙</div><div class="name">Синий плащ</div><div class="price">300 ZC</div><button class="buy-btn">Купить</button></div>
+<div class="shop-item" data-item="Золотая корона" data-price="500"><div class="icon">👑</div><div class="name">Золотая корона</div><div class="price">500 ZC</div><button class="buy-btn">Купить</button></div>
+<div class="shop-item" data-item="Крылья" data-price="750"><div class="icon">🦅</div><div class="name">Крылья</div><div class="price">750 ZC</div><button class="buy-btn">Купить</button></div>
+</div>
+</div>
+
+<div id="page-friends" class="page-content" style="display:none;">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">👥 Друзья</h2>
+<p style="font-size:12px;color:#8899aa;margin-bottom:12px;">Найди друзей или напиши боту</p>
+<input type="text" class="admin-input" id="friend-search" placeholder="🔍 Поиск друзей по нику...">
+<h3 style="font-size:14px;color:#1a1a2a;margin:14px 0 6px;">🤖 Боты поддержки</h3>
+<div class="friends-list" id="bots-list"></div>
+<h3 style="font-size:14px;color:#1a1a2a;margin:14px 0 6px;">👤 Игроки Zyblox</h3>
+<div class="friends-list" id="players-list"></div>
+</div>
+
+<div id="page-chat" class="page-content" style="display:none;">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+<button onclick="closeChat()" style="background:#f0f4f8;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">← Назад</button>
+<h2 style="font-size:16px;color:#1a1a2a;" id="chat-title">Чат</h2>
+</div>
+<div id="chat-messages" style="background:#f0f4f8;border-radius:12px;padding:14px;height:55vh;overflow-y:auto;margin-bottom:10px;"></div>
+<div style="display:flex;gap:8px;">
+<input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="300" style="flex:1;padding:12px;border:1px solid #d0d8e0;border-radius:8px;outline:none;font-family:inherit;">
+<button id="chat-send" style="background:#cc2222;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">→</button>
+</div>
+</div>
+
+<div id="page-buycoins" class="page-content" style="display:none;">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">💰 Купить Zycoins</h2>
+<p style="font-size:12px;color:#8899aa;margin-bottom:12px;">Пополни баланс за рубли.</p>
+<div class="zycoins-grid" id="zycoins-grid"></div>
+</div>
+<div id="page-admin" class="page-content" style="display:none;">
+<h2 style="font-size:18px;color:#1a1a2a;margin-bottom:4px;">👑 Админ-панель</h2>
+<div class="admin-section">
+<h3>💰 Выдать Zycoins</h3>
+<input type="text" class="admin-input" id="admin-coin-nick" placeholder="Ник игрока...">
+<div class="admin-btn-row" id="admin-coin-buttons"></div>
+</div>
+<div class="admin-section">
+<h3>🚫 Забанить игрока</h3>
+<input type="text" class="admin-input" id="admin-ban-nick" placeholder="Ник игрока...">
+<input type="text" class="admin-input" id="admin-ban-reason" placeholder="Причина (необязательно)">
+<div class="ban-duration-select">
+<select id="admin-ban-unit"><option value="minutes">Минуты</option><option value="hours">Часы</option><option value="days" selected>Дни</option><option value="years">Годы</option><option value="forever">Навсегда</option></select>
+<input type="number" id="admin-ban-amount" value="1" min="1" max="9999">
+</div>
+<button class="admin-action-btn" id="admin-ban-btn">🚫 Забанить</button>
+<button class="admin-action-btn green" id="admin-unban-btn" style="margin-left:6px;margin-top:6px;">✅ Разбанить</button>
+</div>
+<div class="admin-section">
+<h3>👥 Пользователи <span id="admin-user-count" style="color:#8899aa;font-size:12px;">(0)</span></h3>
+<input type="text" class="admin-input" id="admin-user-search" placeholder="🔍 Поиск по нику...">
+<div id="admin-users-list" class="admin-users-list"><div class="admin-empty">Пока никого нет</div></div>
+</div>
+<div class="admin-section">
+<h3>🎨 Цветовая тема</h3>
+<div class="theme-grid" id="theme-grid"></div>
+</div>
+<div class="admin-section">
+<h3>✅ Заявки на верификацию <span id="verify-request-count" style="color:#8899aa;font-size:13px;">(0)</span></h3>
+<div id="verify-requests-list" class="admin-users-list"><div class="admin-empty">Пока нет заявок</div></div>
+</div>
+<div class="admin-section">
+<h3>📨 Апелляции</h3>
+<div class="appeal-stats" id="appeal-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+<div style="text-align:center;"><div id="stat-total" style="font-size:18px;font-weight:900;color:#4d96ff;">0</div><div style="font-size:9px;color:#8899aa;">Всего</div></div>
+<div style="text-align:center;"><div id="stat-pending" style="font-size:18px;font-weight:900;color:#ffaa00;">0</div><div style="font-size:9px;color:#8899aa;">Ждут</div></div>
+<div style="text-align:center;"><div id="stat-approved" style="font-size:18px;font-weight:900;color:#6bcb77;">0</div><div style="font-size:9px;color:#8899aa;">Одобр.</div></div>
+<div style="text-align:center;"><div id="stat-rejected" style="font-size:18px;font-weight:900;color:#cc2222;">0</div><div style="font-size:9px;color:#8899aa;">Откл.</div></div>
+</div>
+<div class="appeal-filter-row" id="appeal-filter-row" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
+<button class="appeal-filter-btn active" data-filter="pending" style="padding:5px 10px;border:1px solid #d0d8e0;background:#fff;border-radius:40px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⏳ Ждут</button>
+<button class="appeal-filter-btn" data-filter="approved" style="padding:5px 10px;border:1px solid #d0d8e0;background:#fff;border-radius:40px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">✅ Одобр.</button>
+<button class="appeal-filter-btn" data-filter="rejected" style="padding:5px 10px;border:1px solid #d0d8e0;background:#fff;border-radius:40px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Откл.</button>
+<button class="appeal-filter-btn" data-filter="all" style="padding:5px 10px;border:1px solid #d0d8e0;background:#fff;border-radius:40px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Все</button>
+</div>
+<div id="admin-appeals-list" class="admin-users-list"><div class="admin-empty">Пока нет апелляций</div></div>
+<button class="admin-action-btn" id="appeal-clear-all-btn" style="margin-top:10px;background:transparent;border:1px solid #cc2222;color:#cc2222;">🗑️ Очистить все апелляции</button>
+</div>
+<div class="admin-section">
+<h3>📜 Лог действий</h3>
+<div class="admin-log" id="admin-log">> Панель загружена.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="purchase-overlay" id="confirm-overlay"><div class="purchase-box"><h3>Вы уверены?</h3><div class="price" id="confirm-price">40 Zycoins</div><div class="desc" id="confirm-desc">Стоимость: 5 рублей</div><div id="confirm-buttons"><button class="purchase-btn" id="confirm-yes-btn">Да</button><button class="cancel-btn" id="confirm-no-btn">Нет</button></div></div></div>
+<div class="purchase-overlay" id="agreement-overlay"><div class="purchase-box"><h3>Соглашение</h3><div class="desc">Прочитайте условия</div><div style="background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:12px;margin-bottom:12px;text-align:left;max-height:140px;overflow-y:auto;color:#8899aa;font-size:11px;line-height:1.6;"><strong style="color:#e0e8f0;">Условия:</strong><br>1. Zycoins — виртуальная валюта.<br>2. Покупка невозвратная.<br>3. Зачисление за 5 секунд.<br>4. Запрещено мошенничество.</div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#e0e8f0;font-size:12px;margin-bottom:12px;"><input type="checkbox" id="agreement-checkbox" style="display:none;"><span id="agreement-box" style="width:22px;height:22px;border:2px solid #445566;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;flex-shrink:0;">✓</span>Да, Я принимаю условия</label><div id="agreement-buttons"><button class="purchase-btn" id="agreement-pay-btn" disabled style="opacity:.4;">Оплатить</button><button class="cancel-btn" id="agreement-cancel-btn">Отмена</button></div><div id="agreement-loading" style="display:none;margin-top:12px;"><div class="spinner"></div><div style="color:#8899aa;font-size:12px;" id="agreement-load-text">Обработка... 5</div></div></div></div>
+<div class="purchase-overlay" id="purchase-overlay"><div class="purchase-box"><h3 id="purchase-title">Купить</h3><div class="price" id="purchase-price">150 Zycoins</div><div class="desc" id="purchase-desc">Вы уверены?</div><div class="purchase-loading" id="purchase-loading" style="display:none;"><div class="spinner"></div><div class="load-text">Обработка...</div></div><div id="purchase-buttons"><button class="purchase-btn" id="purchase-confirm-btn">Купить</button><button class="cancel-btn" id="purchase-cancel-btn">Отмена</button></div></div></div>
+
+<div class="admin-response-modal" id="admin-response-modal"><div class="admin-response-modal-content"><h3 id="admin-response-modal-title">Ответ</h3><div class="sub" id="admin-response-modal-sub">Комментарий</div><textarea id="admin-response-textarea" maxlength="300" placeholder="Комментарий для игрока..."></textarea><div class="admin-response-modal-buttons"><button class="send" id="admin-response-send">📨 Отправить</button><button class="cancel" id="admin-response-cancel">Отмена</button></div></div></div>
+<div class="admin-response-modal" id="clear-appeals-modal"><div class="admin-response-modal-content"><h3 style="color:#cc2222;">🗑️ Очистить все апелляции?</h3><div class="sub">Действие необратимо.</div><div id="clear-appeals-count" style="background:#fff5f5;border:1px solid #ffcccc;border-radius:8px;padding:10px;color:#cc2222;font-size:13px;font-weight:700;text-align:center;margin:8px 0;">Будет удалено: 0</div><div class="admin-response-modal-buttons"><button class="send" id="clear-appeals-confirm" style="background:#cc2222;">🗑️ Да</button><button class="cancel" id="clear-appeals-cancel">Отмена</button></div></div></div>
+
+<div class="purchase-overlay" id="terms-overlay"><div class="purchase-box"><h3>📜 Условия общения</h3><div class="desc">Перед началом общения примите условия</div><div style="background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:14px;margin:14px 0;text-align:left;max-height:180px;overflow-y:auto;color:#8899aa;font-size:12px;line-height:1.7;"><strong style="color:#e0e8f0;">5 правил чата:</strong><br><br>1. Не материться и не оскорблять других.<br><br>2. Не спамить и не флудить.<br><br>3. Не рекламировать сторонние ресурсы.<br><br>4. Уважать других игроков и администрацию.<br><br>5. Не выдавать себя за администрацию.</div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#e0e8f0;font-size:13px;margin-bottom:14px;"><input type="checkbox" id="terms-checkbox" style="display:none;"><span id="terms-box" style="width:22px;height:22px;border:2px solid #445566;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:16px;color:transparent;flex-shrink:0;">✓</span>Я принимаю условия</label><div><button class="purchase-btn" id="terms-accept-btn" disabled style="opacity:.4;">Принять</button><button class="cancel-btn" id="terms-cancel-btn">Отмена</button></div></div></div>
+
+<div class="purchase-overlay" id="age-terms-overlay"><div class="purchase-box"><h3>📜 Условия верификации</h3><div class="desc">Прочитай 10 условий</div><div style="background:#0a121e;border:1px solid #1a2a3a;border-radius:10px;padding:14px;margin:14px 0;text-align:left;max-height:200px;overflow-y:auto;color:#8899aa;font-size:12px;line-height:1.7;"><strong style="color:#e0e8f0;">10 условий:</strong><br><br>1. Подтверждаю реальный возраст.<br><br>2. Не передам аккаунт третьим лицам.<br><br>3. Не буду мошенничать.<br><br>4. Не буду спамить.<br><br>5. Не буду оскорблять.<br><br>6. Не буду распространять запрещёнку.<br><br>7. Согласен на обработку данных.<br><br>8. Понимаю, что за нарушение — бан.<br><br>9. Не буду обманывать систему.<br><br>10. Принимаю все правила Zyblox.</div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#e0e8f0;font-size:13px;margin-bottom:14px;"><input type="checkbox" id="age-terms-checkbox" style="display:none;"><span id="age-terms-box" style="width:22px;height:22px;border:2px solid #445566;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:16px;color:transparent;flex-shrink:0;">✓</span>Я принимаю 10 условий</label><div><button class="purchase-btn" id="age-terms-accept" disabled style="opacity:.4;">Принять</button><button class="cancel-btn" id="age-terms-cancel">Отмена</button></div></div></div>
+
+<div class="purchase-overlay" id="age-quiz-overlay"><div class="purchase-box"><h3>❓ Проверка возраста</h3><div class="desc">Ответь на 5 вопросов. Один неверный — блок на 10 минут.</div><div id="quiz-container" style="text-align:left;margin:14px 0;"></div><div id="quiz-error" style="color:#ff4444;font-size:13px;text-align:center;display:none;margin-bottom:10px;"></div><button class="purchase-btn" id="quiz-submit" style="width:100%;">Проверить</button></div></div>
+
+<div class="purchase-overlay" id="verify-terms-overlay"><div class="purchase-box"><h3>✅ Верификация аккаунта</h3><div class="desc">Прочитай 15 условий</div><div class="verify-terms-content"><strong>15 условий:</strong><br><br>1. Аккаунт мой.<br><br>2. Не передавал третьим лицам.<br><br>3. Не буду менять ник.<br><br>4. Соблюдаю правила.<br><br>5. Не буду мошенничать.<br><br>6. Не буду оскорблять.<br><br>7. Не буду спамить.<br><br>8. Не буду распространять запрещёнку.<br><br>9. Не буду выдавать себя за админа.<br><br>10. Согласен на обработку данных.<br><br>11. Верификацию можно отозвать.<br><br>12. Не буду обманывать.<br><br>13. Несу ответственность.<br><br>14. Принимаю правила.<br><br>15. При нарушении — бан навсегда.</div><label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#e0e8f0;font-size:13px;margin-bottom:14px;"><input type="checkbox" id="verify-terms-checkbox" style="display:none;"><span id="verify-terms-box" style="width:22px;height:22px;border:2px solid #445566;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:16px;color:transparent;flex-shrink:0;">✓</span>Я принимаю 15 условий</label><div><button class="purchase-btn" id="verify-terms-accept" disabled style="opacity:.4;">Отправить заявку</button><button class="cancel-btn" id="verify-terms-cancel">Отмена</button></div></div></div>
+
+<div id="error-msg" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(200,0,0,.9);color:#fff;padding:10px 18px;border-radius:20px;font-size:12px;z-index:100;display:none;max-width:90%;text-align:center;"></div>
+
+<script>
+const GAMES=[{name:'Приключение',players:0,emoji:'🏰'},{name:'Гонки',players:0,emoji:'🏎️'},{name:'Битва',players:0,emoji:'⚔️'},{name:'Стройка',players:0,emoji:'🏗️'},{name:'Остров',players:0,emoji:'🏝️'},{name:'Космос',players:0,emoji:'🚀'},{name:'Футбол',players:0,emoji:'⚽'},{name:'Шахты',players:0,emoji:'⛏️'}];
+const ZYCOIN_PACKS=[{coins:40,rub:5},{coins:50,rub:15},{coins:100,rub:30},{coins:150,rub:40},{coins:200,rub:55},{coins:500,rub:80},{coins:1000,rub:100},{coins:1500,rub:125},{coins:5000,rub:150,best:true}];
+const BOTS=[{id:'support',name:'Поддержка',tag:'support',tagText:'Support',emoji:'🎧',desc:'Поможет с проблемами'},{id:'manager',name:'Менеджер',tag:'manager',tagText:'Manager',emoji:'💼',desc:'Вопросы по покупкам'},{id:'helper',name:'Хелпер',tag:'helper',tagText:'Helper',emoji:'🛠️',desc:'Советы новичкам'}];
+const LS_USERS='zyblox_users',LS_SESSION='zyblox_session',LS_BANS='zyblox_bans',LS_THEME='zyblox_theme',LS_APPEALS='zyblox_appeals';
+const CHAT_BAD_WORDS=['хуй','хуя','хую','хуе','хуё','хуи','хуйн','хули','хуле','хер','хрен','пизд','пизда','пиздец','пизду','пизды','бля','блядь','блять','блят','бляд','еба','ебал','ебан','ебуч','ебат','ебну','ёб','еб','сук','сука','суки','сучк','мудак','мудил','гандон','гондон','долбоёб','долбоеб','пидор','пидар','пидр','педик','ахуе','ахуй','нахуй','нахуя','похуй','заебал','заёб','уеб','жопа','жопу','срать','говно','говн','дерьм','мраз','тварь','дебил','идиот','дурак','чмо','ублюд'];
+const FLIRT_PHRASES=['привет','прив','приветик','здарова','здравствуй','хай','hello','hi','как дела','как дела?','как ты','как жизнь','чё как','что делаешь','что делаешь?','чем занят','какой у тебя юз','какой юз','скинь юз','дай юз','как тебя зовут','сколько тебе лет','сколько лет','ты мальчик или девочка','есть тг','есть телега','есть телеграм','есть вк','есть инста','дай номер','скинь номер','дай тг','скинь тг','давай дружить','давай познакомимся','давай встречаться','ты мне нравишься','ты красивая','ты красивый','го в лс','го общаться','го дружить'];
+const AGE_QUESTIONS=[{q:'В каком году распался СССР?',options:['1989','1990','1991','1992'],answer:2},{q:'Кто написал "Войну и мир"?',options:['Пушкин','Достоевский','Толстой','Чехов'],answer:2},{q:'Сколько будет 7 × 8?',options:['48','54','56','64'],answer:2},{q:'Какая планета ближе к Солнцу?',options:['Венера','Меркурий','Марс','Земля'],answer:1},{q:'Когда человек впервые полетел в космос?',options:['1957','1961','1965','1969'],answer:1}];
+const ADMINS=['owner','admin'];
+const ADMIN_COIN_AMOUNTS=[50,100,150,200,500,1000,5000,10000,50000,500000,1000000];
+const THEMES=[{id:'default',name:'Базовый',bg:'#e8ecf0',fg:'#1a1a2a'},{id:'black',name:'Чёрный',bg:'#0a0a0a',fg:'#e0e0e0'},{id:'purple',name:'Фиолет',bg:'#3a1a5e',fg:'#e0d8f0'},{id:'diamond',name:'Алмаз',bg:'#a0d8f0',fg:'#0a2a4a'},{id:'pink',name:'Розовый',bg:'#ff80b0',fg:'#4a0a2a'},{id:'red',name:'Красный',bg:'#4a0a0a',fg:'#f0d8d8'},{id:'white',name:'Белый',bg:'#ffffff',fg:'#1a1a2a'},{id:'gold',name:'Золото',bg:'#4a2a00',fg:'#ffe8a0'}];
+function loadUsers(){try{const r=localStorage.getItem(LS_USERS);if(r)return JSON.parse(r)}catch(e){}return{}}
+function saveUsers(){try{localStorage.setItem(LS_USERS,JSON.stringify(USERS))}catch(e){}}
+function saveSession(n){try{if(n)localStorage.setItem(LS_SESSION,n);else localStorage.removeItem(LS_SESSION)}catch(e){}}
+function loadSession(){try{return localStorage.getItem(LS_SESSION)||null}catch(e){return null}}
+function clearSession(){try{localStorage.removeItem(LS_SESSION)}catch(e){}}
+const USERS=loadUsers();
+let currentUser=null,isLoginMode=true,isBanned=false,banData=null,pendingPack=null,pendingPurchase=null,currentTheme='default',pendingScreenshot=null,currentAppealFilter='pending',pendingResponse=null,currentChat=null,chatHistory={},quizAnswers=[null,null,null,null,null];
+let banTimerInterval=null,banCheckInterval=null,restartTimer=null;
+const historySet=new Set();
+const BANNED_USERS={};
+const $=id=>document.getElementById(id);
+function formatDate(d){const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');return `${dd}.${mm}.${d.getFullYear()}`}
+function isUserAdmin(n){return ADMINS.includes((n||'').toLowerCase())}
+function getBanDurationMs(u,a){const m=60000;switch(u){case'minutes':return a*m;case'hours':return a*60*m;case'days':return a*24*60*m;case'years':return a*365*24*60*m;case'forever':return Infinity}return a*24*60*m}
+function formatDuration(u,a){const map={minutes:'мин',hours:'ч',days:'дн',years:'г',forever:'навсегда'};if(u==='forever')return'навсегда';return `${a} ${map[u]||u}`}
+function adminLogSafe(m){const l=document.getElementById('admin-log');if(!l)return;const t=new Date().toLocaleTimeString();l.innerHTML=`[${t}] ${m}<br>`+l.innerHTML}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function makeVerifiedBadge(s){return `<span class="verified-badge${s?' small':''}"></span>`}
+function getNickWithBadge(n,s){const u=USERS[n];const v=u&&u.accountVerified;return escapeHtml(n)+(v?makeVerifiedBadge(s):'')}
+document.addEventListener('DOMContentLoaded',function(){const fill=document.querySelector('.loader-bar-fill');let p=0;const iv=setInterval(()=>{p+=5;if(p>=100){clearInterval(iv);document.getElementById('loading-screen').classList.add('hidden');const ss=loadSession();const ia=ss&&isUserAdmin(ss);if(ss&&USERS[ss]&&ia){currentUser=ss;document.getElementById('auth-screen').classList.remove('show');document.getElementById('app').classList.add('show');initApp(ss);setTimeout(()=>adminLogSafe('🔑 Автовход: '+ss),100);return}const db=localStorage.getItem('zyblox_device_banned');if(db){try{const dv=JSON.parse(db);const st=dv.until==='forever'||Date.now()<dv.until;if(!st)localStorage.removeItem('zyblox_device_banned');else{banData={nickname:dv.originalNick||'—',reason:dv.reason||'Нарушение правил',duration:dv.amount||1,banTime:new Date().toISOString(),banTimestamp:Date.now(),unit:dv.unit||'hours'};localStorage.setItem('zyblox_ban_data',JSON.stringify(banData));isBanned=true;showBanScreen();return}}catch(e){}}if(ss&&USERS[ss]){const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');const bn=bl[ss];if(bn&&(bn.until==='forever'||Date.now()<bn.until)){banData={nickname:ss,reason:bn.reason||'Нарушение правил',duration:bn.unit==='forever'?99999:bn.amount,banTime:new Date().toISOString(),banTimestamp:Date.now(),unit:bn.unit};localStorage.setItem('zyblox_ban_data',JSON.stringify(banData));isBanned=true;showBanScreen()}else{currentUser=ss;document.getElementById('auth-screen').classList.remove('show');document.getElementById('app').classList.add('show');initApp(ss);setTimeout(()=>adminLogSafe('🔑 Автовход: '+ss),100)}}else{document.getElementById('auth-screen').classList.add('show')}}},100)});
+const authTitle=$('auth-title'),authSub=$('auth-sub'),authSubmitBtn=$('auth-submit-btn'),authSwitchLink=$('auth-switch-link'),authError=$('auth-error'),authUsername=$('auth-username'),authPassword=$('auth-password');
+function switchAuthMode(){isLoginMode=!isLoginMode;if(isLoginMode){authTitle.textContent='Вход в Zyblox';authSub.textContent='Войдите в свой аккаунт';authSubmitBtn.textContent='Войти';authSwitchLink.textContent='Нет аккаунта? Зарегистрироваться';$('birth-date-block').style.display='none'}else{authTitle.textContent='Регистрация';authSub.textContent='Создайте новый аккаунт';authSubmitBtn.textContent='Зарегистрироваться';authSwitchLink.textContent='Уже есть аккаунт? Войти';$('birth-date-block').style.display='block'}authError.classList.remove('show')}
+authSwitchLink.addEventListener('click',switchAuthMode);
+authUsername.addEventListener('input',function(){const n=this.value.trim();const r=!isLoginMode;if(r){const rx=/^[a-z0-9_]+$/;if(n.length===0){authError.classList.remove('show');authSubmitBtn.disabled=false;authSubmitBtn.style.opacity='1';return}if(n.length<4){authError.textContent='❌ Ник минимум 4 символа';authError.classList.add('show');authSubmitBtn.disabled=true;authSubmitBtn.style.opacity='0.5';return}if(n.length>20){authError.textContent='❌ Ник максимум 20 символов';authError.classList.add('show');authSubmitBtn.disabled=true;authSubmitBtn.style.opacity='0.5';return}if(!rx.test(n)){authError.textContent='❌ Только a-z, 0-9, _';authError.classList.add('show');authSubmitBtn.disabled=true;authSubmitBtn.style.opacity='0.5';return}}if(n&&isNickBanned(n)&&!isUserAdmin(n)){authError.textContent=`🚫 Ник (${n}) забанен!`;authError.classList.add('show');authSubmitBtn.disabled=true;authSubmitBtn.style.opacity='0.5'}else{authError.classList.remove('show');authSubmitBtn.disabled=false;authSubmitBtn.style.opacity='1'}});
+authPassword.addEventListener('input',function(){if(isLoginMode)return;const p=this.value;if(p.length===0){authError.classList.remove('show');return}if(p.length<9){authError.textContent=`❌ Пароль минимум 9 символов (сейчас ${p.length})`;authError.classList.add('show');authSubmitBtn.disabled=true;authSubmitBtn.style.opacity='0.5'}else{authError.classList.remove('show');authSubmitBtn.disabled=false;authSubmitBtn.style.opacity='1'}});
+function isNickBanned(n){try{const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');const b=bl[n];if(b){if(b.until==='forever'||Date.now()<b.until)return true;delete bl[n];localStorage.setItem(LS_BANS,JSON.stringify(bl))}}catch(e){}return false}
+function handleAuth(){const u=authUsername.value.trim(),p=authPassword.value.trim();if(!u||!p){authError.textContent='Заполните все поля';authError.classList.add('show');return}if(!isUserAdmin(u)){const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');const b=bl[u];if(b){if(b.until==='forever'||Date.now()<b.until){authError.textContent=`🚫 Аккаунт забанен! ${b.reason}`;authError.classList.add('show');return}else{delete bl[u];localStorage.setItem(LS_BANS,JSON.stringify(bl))}}}if(isLoginMode){if(USERS[u]&&USERS[u].password===p){authError.classList.remove('show');currentUser=u;saveSession(u);document.getElementById('auth-screen').classList.remove('show');document.getElementById('app').classList.add('show');initApp(u)}else{authError.textContent='Неверный логин или пароль';authError.classList.add('show')}}else{if(USERS[u]){authError.textContent='Пользователь уже существует';authError.classList.add('show');return}if(u.length<4){authError.textContent='❌ Ник минимум 4 символа';authError.classList.add('show');return}if(u.length>20){authError.textContent='❌ Ник максимум 20 символов';authError.classList.add('show');return}if(!/^[a-z0-9_]+$/.test(u)){authError.textContent='❌ Только a-z, 0-9, _';authError.classList.add('show');return}if(p.length<9){authError.textContent='❌ Пароль минимум 9 символов';authError.classList.add('show');return}if(!isUserAdmin(u)){const dr=localStorage.getItem('zyblox_device_banned');if(dr){try{const dv=JSON.parse(dr);if(dv.until==='forever'||Date.now()<dv.until){authError.textContent='🚫 Устройство заблокировано!';authError.classList.add('show');return}else localStorage.removeItem('zyblox_device_banned')}catch(e){}}}const bd=parseInt($('birth-day').value),bm=parseInt($('birth-month').value),by=parseInt($('birth-year').value);if(!bd||!bm||!by){authError.textContent='❌ Укажи дату рождения';authError.classList.add('show');return}if(bd<1||bd>31){authError.textContent='❌ День 1-31';authError.classList.add('show');return}if(bm<1||bm>12){authError.textContent='❌ Месяц 1-12';authError.classList.add('show');return}const cy=new Date().getFullYear();if(by<1900||by>cy){authError.textContent='❌ Некорректный год';authError.classList.add('show');return}const bdt=new Date(by,bm-1,bd);if(bdt.getDate()!==bd||bdt.getMonth()!==bm-1||bdt>new Date()){authError.textContent='❌ Такой даты нет';authError.classList.add('show');return}const td=new Date();let age=td.getFullYear()-by;const md=td.getMonth()-(bm-1);if(md<0||(md===0&&td.getDate()<bd))age--;const isAdm=isUserAdmin(u);USERS[u]={password:p,coins:isAdm?1000000:0,plus:isAdm,joined:formatDate(new Date()),isAdmin:isAdm,theme:'default',birthDate:`${String(bd).padStart(2,'0')}.${String(bm).padStart(2,'0')}.${by}`,age:age,ageVerified:false,ageCheckLockUntil:0,accountVerified:isAdm,verifyRequestPending:false};saveUsers();saveSession(u);currentUser=u;document.getElementById('auth-screen').classList.remove('show');document.getElementById('app').classList.add('show');initApp(u)}}
+authSubmitBtn.addEventListener('click',handleAuth);
+authPassword.addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth()});
+authUsername.addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth()});
+function initApp(u){const user=USERS[u];document.getElementById('nav-username').innerHTML=getNickWithBadge(u,true);document.getElementById('nav-avatar').textContent=u.charAt(0).toUpperCase();document.getElementById('nav-zycoins').textContent=user.coins;document.getElementById('welcome-nick').innerHTML=getNickWithBadge(u);document.getElementById('home-coins').textContent=user.coins;document.getElementById('profile-name').innerHTML=getNickWithBadge(u);document.getElementById('profile-avatar').textContent=u.charAt(0).toUpperCase();document.getElementById('profile-coins').textContent=user.coins;document.getElementById('profile-joined').textContent=user.joined||'—';document.getElementById('profile-birth').textContent=user.birthDate||'—';document.getElementById('profile-age').textContent=user.age?user.age+' лет':'—';renderGames(GAMES,'games-grid');renderGames(GAMES,'games-grid-all');renderZycoins(ZYCOIN_PACKS,'zycoins-grid');setupNavigation();showAdminUI(u);renderAdminCoins();renderThemes();const ut=user.theme||localStorage.getItem(LS_THEME)||'default';currentTheme=ut;THEMES.forEach(t=>document.body.classList.remove('theme-'+t.id));if(ut!=='default')document.body.classList.add('theme-'+ut);renderThemes();updateAgeVerifyButton();updateVerifyAccButton();if(isUserAdmin(u)){setTimeout(()=>{renderAdminUsers('');renderAdminAppeals();renderVerifyRequests()},150)}setInterval(updateAgeVerifyButton,60000)}
+function renderGames(g,c){const el=document.getElementById(c);if(!el)return;el.innerHTML='';g.forEach(gm=>{const card=document.createElement('div');card.className='game-card';card.innerHTML=`<div class="thumb">${gm.emoji}</div><div class="info"><div class="name">${gm.name}</div><div class="players">👤 ${gm.players}</div></div><div class="dev-overlay">⚙️ РАЗРАБАТЫВАЕТСЯ</div>`;card.addEventListener('click',()=>alert('⚙️ Эта игра ещё разрабатывается!'));el.appendChild(card)})}
+function renderZycoins(p,c){const el=document.getElementById(c);if(!el)return;el.innerHTML='';p.forEach(pk=>{const card=document.createElement('div');card.className='zycoin-card'+(pk.best?' best-value':'');card.innerHTML=`<div class="coin-emoji">💰</div><div class="amount">${pk.coins.toLocaleString()} <span>ZC</span></div><div class="price-rub">${pk.rub} ₽</div><button class="buy-coin-btn">Купить</button>`;card.querySelector('.buy-coin-btn').addEventListener('click',e=>{e.stopPropagation();openConfirm(pk)});el.appendChild(card)})}
+function setupNavigation(){const pages=['home','games','profile','shop','buycoins','admin','friends','chat'];const nl=document.querySelectorAll('.nav-link');const si=document.querySelectorAll('.sidebar-item');function sp(page){pages.forEach(p=>{const el=document.getElementById(`page-${p}`);if(el)el.style.display='none'});const t=document.getElementById(`page-${page}`);if(t)t.style.display='block';nl.forEach(l=>l.classList.toggle('active',l.dataset.page===page));si.forEach(i=>i.classList.toggle('active',i.dataset.page===page));if(page==='friends')renderFriends()}nl.forEach(l=>l.addEventListener('click',()=>sp(l.dataset.page)));si.forEach(i=>i.addEventListener('click',()=>{if(i.dataset.page)sp(i.dataset.page)}));sp('home')}
+function openConfirm(pk){pendingPack=pk;document.getElementById('confirm-price').textContent=`${pk.coins.toLocaleString()} Zycoins`;document.getElementById('confirm-desc').textContent=`Стоимость: ${pk.rub} рублей`;document.getElementById('confirm-overlay').classList.add('show')}
+document.getElementById('confirm-yes-btn').addEventListener('click',()=>{document.getElementById('confirm-overlay').classList.remove('show');const cb=document.getElementById('agreement-checkbox'),bx=document.getElementById('agreement-box'),pb=document.getElementById('agreement-pay-btn');cb.checked=false;bx.style.color='transparent';bx.style.borderColor='#445566';bx.style.background='transparent';pb.disabled=true;pb.style.opacity='0.4';document.getElementById('agreement-loading').style.display='none';document.getElementById('agreement-buttons').style.display='block';document.getElementById('agreement-overlay').classList.add('show')});
+document.getElementById('confirm-no-btn').addEventListener('click',()=>{document.getElementById('confirm-overlay').classList.remove('show');pendingPack=null});
+document.getElementById('agreement-box').addEventListener('click',()=>{const cb=document.getElementById('agreement-checkbox'),bx=document.getElementById('agreement-box'),pb=document.getElementById('agreement-pay-btn');cb.checked=!cb.checked;if(cb.checked){bx.style.color='white';bx.style.borderColor='#6bcb77';bx.style.background='#6bcb77';pb.disabled=false;pb.style.opacity='1'}else{bx.style.color='transparent';bx.style.borderColor='#445566';bx.style.background='transparent';pb.disabled=true;pb.style.opacity='0.4'}});
+document.getElementById('agreement-cancel-btn').addEventListener('click',()=>{document.getElementById('agreement-overlay').classList.remove('show');pendingPack=null});
+document.getElementById('agreement-pay-btn').addEventListener('click',function(){if(this.disabled||!pendingPack||!currentUser)return;this.disabled=true;this.style.opacity='0.4';document.getElementById('agreement-buttons').style.display='none';document.getElementById('agreement-loading').style.display='block';const lt=document.getElementById('agreement-load-text');let s=5;lt.textContent=`Обработка платежа... ${s}`;const tm=setInterval(()=>{s--;if(s>0)lt.textContent=`Обработка платежа... ${s}`;else{clearInterval(tm);lt.textContent='Зачисление Zycoins...';const user=USERS[currentUser];user.coins+=pendingPack.coins;saveUsers();document.getElementById('nav-zycoins').textContent=user.coins;document.getElementById('home-coins').textContent=user.coins;document.getElementById('profile-coins').textContent=user.coins;setTimeout(()=>{document.getElementById('agreement-overlay').classList.remove('show');document.getElementById('agreement-loading').style.display='none';document.getElementById('agreement-buttons').style.display='block';alert(`✅ Куплено ${pendingPack.coins.toLocaleString()} Zycoins!`);pendingPack=null},600)}},1000)});
+function showAdminUI(u){const a=isUserAdmin(u);document.getElementById('nav-admin-btn').style.display=a?'inline-block':'none';document.getElementById('sidebar-admin-item').style.display=a?'flex':'none';document.getElementById('nav-admin-tag').style.display=a?'inline-flex':'none'}
+function adminLog(m){const l=document.getElementById('admin-log');if(!l)return;const t=new Date().toLocaleTimeString();l.innerHTML=`[${t}] ${m}<br>`+l.innerHTML}
+function renderAdminCoins(){const r=document.getElementById('admin-coin-buttons');if(!r)return;r.innerHTML='';ADMIN_COIN_AMOUNTS.forEach(a=>{const b=document.createElement('button');b.className='admin-coin-btn';b.textContent='+'+a.toLocaleString();b.addEventListener('click',()=>giveCoins(a));r.appendChild(b)})}
+function giveCoins(a){const n=document.getElementById('admin-coin-nick').value.trim();if(!n){alert('❌ Введи ник');return}const t=USERS[n];if(!t){alert(`❌ "${n}" не найден`);return}t.coins+=a;saveUsers();if(n===currentUser){document.getElementById('nav-zycoins').textContent=t.coins;document.getElementById('home-coins').textContent=t.coins;document.getElementById('profile-coins').textContent=t.coins}adminLog(`💰 +${a.toLocaleString()} ZC → "${n}"`);alert(`✅ +${a.toLocaleString()} ZC → ${n}`);renderAdminUsers($('admin-user-search')?.value||'')}
+function banUser(){const n=document.getElementById('admin-ban-nick').value.trim(),r=document.getElementById('admin-ban-reason').value.trim()||'Нарушение правил',u=document.getElementById('admin-ban-unit').value,a=parseInt(document.getElementById('admin-ban-amount').value)||1;if(!n){alert('❌ Введи ник');return}if(!USERS[n]){alert(`❌ "${n}" не найден`);return}if(isUserAdmin(n)){alert('❌ Нельзя забанить админа!');return}const ms=getBanDurationMs(u,a);const unt=ms===Infinity?'forever':Date.now()+ms;BANNED_USERS[n]={until:unt,reason:r,unit:u,amount:a};const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');bl[n]=BANNED_USERS[n];localStorage.setItem(LS_BANS,JSON.stringify(bl));adminLog(`🚫 Забанен "${n}" на ${formatDuration(u,a)}. ${r}`);alert(`✅ ${n} забанен`);if(n===currentUser){banData={nickname:n,reason:r,duration:u==='forever'?99999:a,banTime:new Date().toISOString(),banTimestamp:Date.now(),unit:u};localStorage.setItem('zyblox_ban_data',JSON.stringify(banData));document.getElementById('app').classList.remove('show');showBanScreen()}renderAdminUsers($('admin-user-search')?.value||'')}
+function unbanUser(){const n=document.getElementById('admin-ban-nick').value.trim();if(!n){alert('❌ Введи ник');return}const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');if(!bl[n]){alert(`❌ "${n}" не в бане`);return}delete bl[n];delete BANNED_USERS[n];localStorage.setItem(LS_BANS,JSON.stringify(bl));try{const br=localStorage.getItem('zyblox_ban_data');if(br){const bd=JSON.parse(br);if(bd.nickname===n)localStorage.removeItem('zyblox_ban_data')}}catch(e){}adminLog(`✅ Разбанен "${n}"`);alert(`✅ ${n} разбанен`);renderAdminUsers($('admin-user-search')?.value||'')}
+document.getElementById('admin-ban-btn')?.addEventListener('click',banUser);
+document.getElementById('admin-unban-btn')?.addEventListener('click',unbanUser);
+function formatBanRemaining(b){if(!b)return'';if(b.until==='forever')return'навсегда';const l=b.until-Date.now();if(l<=0)return'истёк';const s=Math.floor(l/1000),m=Math.floor(s/60),h=Math.floor(m/60),d=Math.floor(h/24);if(d>0)return`${d}д ${h%24}ч`;if(h>0)return`${h}ч ${m%60}м`;if(m>0)return`${m}м ${s%60}с`;return`${s}с`}
+function renderAdminUsers(f=''){const c=document.getElementById('admin-users-list'),ce=document.getElementById('admin-user-count');if(!c)return;const ns=Object.keys(USERS).sort((a,b)=>{const aa=isUserAdmin(a)?1:0,bb=isUserAdmin(b)?1:0;if(aa!==bb)return bb-aa;const ao=(a===currentUser)?1:0,bo=(b===currentUser)?1:0;if(ao!==bo)return bo-ao;return a.localeCompare(b)});const fl=ns.filter(n=>n.toLowerCase().includes(f.toLowerCase()));if(ce)ce.textContent=`(${ns.length})`;if(fl.length===0){c.innerHTML=`<div class="admin-empty">${f?'Ничего':'Пока никого'}</div>`;return}const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');c.innerHTML='';fl.forEach(n=>{const u=USERS[n],b=bl[n];const ib=b&&(b.until==='forever'||Date.now()<b.until);const io=n===currentUser;const ia=isUserAdmin(n);const iv=u.accountVerified;const row=document.createElement('div');row.className='admin-user-row'+(ib?' banned':'');const tags=[];if(ia)tags.push('<span class="admin-mini-tag admin">👑</span>');if(io)tags.push('<span class="admin-mini-tag online">●</span>');else tags.push('<span class="admin-mini-tag offline">○</span>');if(iv)tags.push('<span class="admin-mini-tag" style="background:#00a2ff;color:white;">✅</span>');if(ib)tags.push(`<span class="admin-mini-tag banned">🚫 ${formatBanRemaining(b)}</span>`);row.innerHTML=`<div class="admin-user-avatar">${n.charAt(0).toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-nick">${getNickWithBadge(n,true)} ${tags.join(' ')}</div><div class="admin-user-meta"><span>📅 ${u.joined||'—'}</span>${b?`<span>🚫 ${b.reason}</span>`:''}</div><div class="admin-user-actions">${iv?`<button class="admin-verify-btn remove" data-nick="${n}" data-action="remove">❌ Снять галочку</button>`:`<button class="admin-verify-btn" data-nick="${n}" data-action="give">✅ Выдать галочку</button>`}</div></div><div class="admin-user-coins">${u.coins.toLocaleString()} ZC</div>`;row.addEventListener('click',e=>{if(e.target.closest('.admin-user-actions'))return;document.getElementById('admin-coin-nick').value=n;document.getElementById('admin-ban-nick').value=n;adminLog(`👆 Выбран "${n}"`)});c.appendChild(row)});c.querySelectorAll('.admin-verify-btn').forEach(b=>{b.addEventListener('click',e=>{e.stopPropagation();toggleVerification(b.dataset.nick,b.dataset.action==='give')})})}
+document.getElementById('admin-user-search')?.addEventListener('input',function(){renderAdminUsers(this.value.trim())});
+function toggleVerification(n,g){const u=USERS[n];if(!u)return;if(g){if(u.accountVerified){alert(`✅ Уже верифицирован`);return}if(!confirm(`✅ Выдать верификацию "${n}"?`))return;u.accountVerified=true;u.verifyRequestPending=false;u.verifyGivenBy=currentUser;u.verifyGivenAt=new Date().toLocaleString('ru-RU');saveUsers();adminLog(`✅ [${new Date().toLocaleString('ru-RU')}] Верификация выдана: "${n}"`);alert(`✅ "${n}" верифицирован`)}else{if(!u.accountVerified){alert(`❌ Не верифицирован`);return}if(!confirm(`❌ Снять верификацию с "${n}"?`))return;u.accountVerified=false;saveUsers();adminLog(`❌ [${new Date().toLocaleString('ru-RU')}] Верификация снята: "${n}"`);alert(`❌ Галочка снята`)}renderAdminUsers($('admin-user-search')?.value||'');renderVerifyRequests();if(typeof renderFriends==='function')renderFriends();if(n===currentUser){$('nav-username').innerHTML=getNickWithBadge(currentUser,true);$('welcome-nick').innerHTML=getNickWithBadge(currentUser);$('profile-name').innerHTML=getNickWithBadge(currentUser);updateVerifyAccButton()}}
+function renderVerifyRequests(){const c=document.getElementById('verify-requests-list'),ce=document.getElementById('verify-request-count');if(!c)return;const p=Object.keys(USERS).filter(n=>USERS[n].verifyRequestPending&&!USERS[n].accountVerified);if(ce)ce.textContent=`(${p.length})`;if(p.length===0){c.innerHTML='<div class="admin-empty">Пока нет заявок</div>';return}c.innerHTML='';p.forEach(n=>{const u=USERS[n];const it=document.createElement('div');it.className='verify-request-item';it.innerHTML=`<div class="verify-request-header"><div class="verify-request-nick">👤 ${escapeHtml(n)}</div><div class="verify-request-time">📅 ${u.verifyRequestFormatted||'—'}</div></div><div class="verify-request-actions"><button class="verify-accept" data-nick="${n}">✅ Принять</button><button class="verify-reject" data-nick="${n}">❌ Отклонить</button></div>`;c.appendChild(it)});c.querySelectorAll('.verify-accept').forEach(b=>b.addEventListener('click',()=>handleVerifyRequest(b.dataset.nick,true)));c.querySelectorAll('.verify-reject').forEach(b=>b.addEventListener('click',()=>handleVerifyRequest(b.dataset.nick,false)))}
+function handleVerifyRequest(n,a){const u=USERS[n];if(!u)return;if(a){u.accountVerified=true;u.verifyRequestPending=false;saveUsers();adminLog(`✅ [${new Date().toLocaleString('ru-RU')}] Верификация одобрена: "${n}"`);alert(`✅ "${n}" верифицирован`)}else{u.verifyRequestPending=false;saveUsers();adminLog(`❌ [${new Date().toLocaleString('ru-RU')}] Верификация отклонена: "${n}"`);alert('❌ Заявка отклонена')}renderVerifyRequests();renderAdminUsers($('admin-user-search')?.value||'')}
+function updateVerifyAccButton(){const u=USERS[currentUser];if(!u)return;const b=document.getElementById('verify-acc-btn');if(!b)return;if(u.accountVerified){b.textContent='✅ ВЕРИФИЦИРОВАН';b.disabled=true;b.classList.remove('pending')}else if(u.verifyRequestPending){b.textContent='⏳ НА РАССМОТРЕНИИ';b.disabled=true;b.classList.add('pending')}else{b.textContent='✅ ПОЛУЧИТЬ ВЕРИФИКАЦИЮ';b.disabled=false;b.classList.remove('pending')}}
+document.getElementById('verify-acc-btn')?.addEventListener('click',()=>{if(!currentUser)return;const u=USERS[currentUser];if(u.accountVerified){alert('✅ Уже');return}if(u.verifyRequestPending){alert('⏳ Отправлена');return}$('verify-terms-overlay').classList.add('show');$('verify-terms-checkbox').checked=false;$('verify-terms-box').style.color='transparent';$('verify-terms-box').style.background='transparent';$('verify-terms-accept').disabled=true;$('verify-terms-accept').style.opacity='0.4'});
+document.getElementById('verify-terms-box')?.addEventListener('click',()=>{const cb=$('verify-terms-checkbox');cb.checked=!cb.checked;const bx=$('verify-terms-box'),bt=$('verify-terms-accept');if(cb.checked){bx.style.color='white';bx.style.background='#6bcb77';bx.style.borderColor='#6bcb77';bt.disabled=false;bt.style.opacity='1'}else{bx.style.color='transparent';bx.style.background='transparent';bx.style.borderColor='#445566';bt.disabled=true;bt.style.opacity='0.4'}});
+document.getElementById('verify-terms-cancel')?.addEventListener('click',()=>$('verify-terms-overlay').classList.remove('show'));
+document.getElementById('verify-terms-accept')?.addEventListener('click',()=>{const u=USERS[currentUser];u.verifyRequestPending=true;u.verifyRequestFormatted=new Date().toLocaleString('ru-RU');saveUsers();$('verify-terms-overlay').classList.remove('show');updateVerifyAccButton();alert('✅ Заявка отправлена!')});
+function updateAgeVerifyButton(){const u=USERS[currentUser];if(!u)return;const b=document.getElementById('verify-age-btn'),s=document.getElementById('age-status');if(!b||!s)return;if(u.ageVerified){b.textContent='✅ ВОЗРАСТ ПОДТВЕРЖДЁН';b.style.background='linear-gradient(135deg,#6bcb77,#4aa857)';b.disabled=true;s.textContent='Подтверждён';s.style.color='#6bcb77'}else if(u.ageCheckLockUntil&&Date.now()<u.ageCheckLockUntil){const l=Math.ceil((u.ageCheckLockUntil-Date.now())/60000);b.textContent=`⏳ ПОДОЖДИ ${l} МИН`;b.style.background='linear-gradient(135deg,#555,#333)';b.disabled=true;s.textContent=`Блок ещё ${l} мин`;s.style.color='#cc2222'}else{b.textContent='ПОДТВЕРДИТЬ ВОЗРАСТ';b.style.background='linear-gradient(135deg,#cc2222,#ff4444)';b.disabled=false;s.textContent='Не подтверждён';s.style.color='#8899aa'}}
+document.getElementById('verify-age-btn')?.addEventListener('click',()=>{if(!currentUser)return;const u=USERS[currentUser];if(u.ageVerified){alert('✅ Уже');return}if(u.ageCheckLockUntil&&Date.now()<u.ageCheckLockUntil){const l=Math.ceil((u.ageCheckLockUntil-Date.now())/60000);alert(`⏳ Через ${l} мин`);return}$('age-terms-overlay').classList.add('show');$('age-terms-checkbox').checked=false;$('age-terms-box').style.color='transparent';$('age-terms-box').style.background='transparent';$('age-terms-accept').disabled=true;$('age-terms-accept').style.opacity='0.4'});
+document.getElementById('age-terms-box')?.addEventListener('click',()=>{const cb=$('age-terms-checkbox');cb.checked=!cb.checked;const bx=$('age-terms-box'),bt=$('age-terms-accept');if(cb.checked){bx.style.color='white';bx.style.background='#6bcb77';bx.style.borderColor='#6bcb77';bt.disabled=false;bt.style.opacity='1'}else{bx.style.color='transparent';bx.style.background='transparent';bx.style.borderColor='#445566';bt.disabled=true;bt.style.opacity='0.4'}});
+document.getElementById('age-terms-cancel')?.addEventListener('click',()=>$('age-terms-overlay').classList.remove('show'));
+document.getElementById('age-terms-accept')?.addEventListener('click',()=>{$('age-terms-overlay').classList.remove('show');showAgeQuiz()});
+function showAgeQuiz(){quizAnswers=[null,null,null,null,null];$('quiz-error').style.display='none';const c=$('quiz-container');c.innerHTML='';AGE_QUESTIONS.forEach((q,qi)=>{const d=document.createElement('div');d.className='quiz-question';d.innerHTML=`<div class="quiz-q">${qi+1}. ${q.q}</div><div class="quiz-options"></div>`;const od=d.querySelector('.quiz-options');q.options.forEach((o,oi)=>{const oe=document.createElement('div');oe.className='quiz-option';oe.textContent=o;oe.addEventListener('click',()=>{od.querySelectorAll('.quiz-option').forEach(x=>x.classList.remove('selected'));oe.classList.add('selected');quizAnswers[qi]=oi});od.appendChild(oe)});c.appendChild(d)});$('age-quiz-overlay').classList.add('show')}
+document.getElementById('quiz-submit')?.addEventListener('click',()=>{const e=$('quiz-error');if(quizAnswers.some(a=>a===null)){e.textContent='❌ Ответь на все';e.style.display='block';return}let ok=true;for(let i=0;i<AGE_QUESTIONS.length;i++){if(quizAnswers[i]!==AGE_QUESTIONS[i].answer){ok=false;break}}if(ok){const u=USERS[currentUser];u.ageVerified=true;u.ageCheckLockUntil=0;saveUsers();$('age-quiz-overlay').classList.remove('show');alert('✅ Возраст подтверждён!');updateAgeVerifyButton()}else{const u=USERS[currentUser];u.ageCheckLockUntil=Date.now()+10*60*1000;saveUsers();$('age-quiz-overlay').classList.remove('show');e.style.display='none';alert('❌ Вы не прошли проверку!\nСледующая попытка через 10 минут.');updateAgeVerifyButton()}});
+setInterval(()=>{if(!currentUser)return;const u=USERS[currentUser];if(u&&u.ageCheckLockUntil&&Date.now()>=u.ageCheckLockUntil){u.ageCheckLockUntil=0;saveUsers();updateAgeVerifyButton()}},30000);
+function renderAdminAppeals(){const c=document.getElementById('admin-appeals-list');if(!c)return;let ap=[];try{ap=JSON.parse(localStorage.getItem(LS_APPEALS)||'[]')}catch(e){}const st={total:ap.length,pending:ap.filter(a=>a.status==='pending').length,approved:ap.filter(a=>a.status==='approved').length,rejected:ap.filter(a=>a.status==='rejected').length};document.getElementById('stat-total').textContent=st.total;document.getElementById('stat-pending').textContent=st.pending;document.getElementById('stat-approved').textContent=st.approved;document.getElementById('stat-rejected').textContent=st.rejected;let fl=currentAppealFilter==='all'?ap:ap.filter(a=>a.status===currentAppealFilter);fl.sort((a,b)=>b.timestamp-a.timestamp);if(fl.length===0){c.innerHTML=`<div class="admin-empty">${st.total===0?'Пока нет апелляций':'Нет апелляций'}</div>`;return}c.innerHTML='';fl.forEach(a=>{const card=document.createElement('div');card.style.background='#fafbfc';card.style.border='1px solid #e0e6ec';card.style.borderRadius='10px';card.style.padding='12px 14px';card.style.marginBottom='8px';card.style.borderLeft='4px solid #ffaa00';const stg={pending:'<span class="admin-mini-tag" style="background:#ffaa00;color:#1a1a2a;">⏳</span>',approved:'<span class="admin-mini-tag online">✅</span>',rejected:'<span class="admin-mini-tag banned">❌</span>'}[a.status];let sh=a.screenshot?`<div style="margin:8px 0;border-radius:8px;overflow:hidden;max-width:300px;"><img src="${a.screenshot}" onclick="window.open(this.src,'_blank')" style="width:100%;max-height:160px;object-fit:cover;display:block;"></div>`:'';let rh=a.adminResponse?`<div style="background:#f0f4f8;padding:8px;border-radius:8px;margin:8px 0;font-size:12px;"><strong>📩 Ответ:</strong> ${escapeHtml(a.adminResponse)}</div>`:'';const ah=a.status==='pending'?`<div style="display:flex;gap:6px;margin-top:8px;"><button class="appeal-mini-btn green" data-action="approve" data-id="${a.id}" style="flex:1;padding:7px 12px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:#6bcb77;color:white;font-family:inherit;">✅ Разбанить</button><button class="appeal-mini-btn red" data-action="reject" data-id="${a.id}" style="flex:1;padding:7px 12px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;background:#cc2222;color:white;font-family:inherit;">❌ Отклонить</button></div>`:'';card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap;"><div style="font-size:13px;font-weight:700;color:#1a1a2a;">👤 ${getNickWithBadge(a.nick)} ${stg}</div><div style="font-size:11px;color:#8899aa;">📅 ${a.time}</div></div><div style="font-size:11px;color:#8899aa;margin-bottom:6px;">🚫 ${escapeHtml(a.reason)}</div><div style="font-size:13px;color:#445566;line-height:1.5;background:#fff;padding:8px;border-radius:8px;border:1px solid #e0e6ec;margin-bottom:8px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(a.text)}</div>${sh}${rh}${ah}`;c.appendChild(card)});c.querySelectorAll('.appeal-mini-btn').forEach(b=>b.addEventListener('click',()=>openResponseModal(parseInt(b.dataset.id),b.dataset.action)))}
+function openResponseModal(id,act){pendingResponse={appealId:id,action:act};const m=document.getElementById('admin-response-modal');$('admin-response-modal-title').textContent=act==='approve'?'✅ Одобрить':'❌ Отклонить';$('admin-response-modal-sub').textContent=act==='approve'?'Комментарий игроку':'Причина отказа';$('admin-response-textarea').value='';m.classList.add('show')}
+document.getElementById('admin-response-cancel')?.addEventListener('click',()=>{$('admin-response-modal').classList.remove('show');pendingResponse=null});
+document.getElementById('admin-response-send')?.addEventListener('click',()=>{if(!pendingResponse)return;const {appealId,action}=pendingResponse;const r=$('admin-response-textarea').value.trim()||(action==='approve'?'Одобрено':'Отклонено');let ap=JSON.parse(localStorage.getItem(LS_APPEALS)||'[]');const a=ap.find(x=>x.id===appealId);if(!a)return;a.status=action==='approve'?'approved':'rejected';a.adminResponse=r;a.responseTime=new Date().toLocaleString('ru-RU');localStorage.setItem(LS_APPEALS,JSON.stringify(ap));if(action==='approve'){const bl=JSON.parse(localStorage.getItem(LS_BANS)||'{}');delete bl[a.nick];localStorage.setItem(LS_BANS,JSON.stringify(bl));localStorage.removeItem('zyblox_ban_data');adminLog(`✅ [${new Date().toLocaleString('ru-RU')}] Разбан: "${a.nick}"`);alert(`✅ "${a.nick}" разбанен!`)}else{adminLog(`❌ [${new Date().toLocaleString('ru-RU')}] Отклонена: "${a.nick}"`);alert('❌ Отклонено')}$('admin-response-modal').classList.remove('show');pendingResponse=null;renderAdminAppeals();renderAdminUsers($('admin-user-search')?.value||'')});
+document.querySelectorAll('.appeal-filter-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.appeal-filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentAppealFilter=b.dataset.filter;renderAdminAppeals()}));
+document.getElementById('appeal-clear-all-btn')?.addEventListener('click',()=>{let ap=[];try{ap=JSON.parse(localStorage.getItem(LS_APPEALS)||'[]')}catch(e){}if(ap.length===0){alert('ℹ️ Пусто');return}$('clear-appeals-count').textContent=`Будет удалено: ${ap.length}`;$('clear-appeals-modal').classList.add('show')});
+document.getElementById('clear-appeals-cancel')?.addEventListener('click',()=>$('clear-appeals-modal').classList.remove('show'));
+document.getElementById('clear-appeals-confirm')?.addEventListener('click',()=>{let c=0;try{c=JSON.parse(localStorage.getItem(LS_APPEALS)||'[]').length}catch(e){}localStorage.setItem(LS_APPEALS,'[]');$('clear-appeals-modal').classList.remove('show');adminLog(`🗑️ Очищено: ${c}`);alert(`✅ Удалено ${c}`);renderAdminAppeals()});
+function renderThemes(){const g=document.getElementById('theme-grid');if(!g)return;g.innerHTML='';THEMES.forEach(t=>{const b=document.createElement('div');b.className='theme-btn'+(t.id===currentTheme?' active':'');b.style.background=t.bg;b.style.color=t.fg;b.textContent=t.name;b.addEventListener('click',()=>applyTheme(t.id));g.appendChild(b)})}
+function applyTheme(id){THEMES.forEach(t=>document.body.classList.remove('theme-'+t.id));if(id!=='default')document.body.classList.add('theme-'+id);currentTheme=id;localStorage.setItem(LS_THEME,id);if(currentUser&&USERS[currentUser]){USERS[currentUser].theme=id;saveUsers()}renderThemes();adminLog(`🎨 Тема: ${id}`)}
+function startBanTimer(){if(banTimerInterval)clearInterval(banTimerInterval);const tb=document.getElementById('ban-timer-box'),tv=document.getElementById('ban-timer-value');if(!tb||!tv)return;let be=null,fi=false;if(banData){if(banData.unit==='forever'||banData.until==='forever')fi=true;else if(banData.until&&typeof banData.until==='number')be=banData.until;else if(banData.banTimestamp&&banData.duration&&banData.unit)be=banData.banTimestamp+getBanDurationMs(banData.unit,banData.duration)}if(!be&&!fi){try{const bs=JSON.parse(localStorage.getItem(LS_BANS)||'{}');const n=banData?.nickname;if(n&&bs[n]){if(bs[n].until==='forever')fi=true;else be=bs[n].until}}catch(e){}}if(fi){tv.innerHTML='<span style="color:#ff4444;font-size:20px;font-weight:900;">∞ НАВСЕГДА</span>';tb.querySelector('.ban-timer-label').textContent='⛔ Бессрочно';return}if(!be){tb.style.display='none';return}tb.style.display='block';function tick(){const l=be-Date.now();if(l<=0){clearInterval(banTimerInterval);tv.innerHTML='<span style="color:#6bcb77;font-size:18px;font-weight:900;">✅ БАН ИСТЁК</span>';tb.querySelector('.ban-timer-label').textContent='🎉 Можешь войти';return}const s=Math.floor(l/1000),d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sc=s%60;const p=n=>String(n).padStart(2,'0');tv.innerHTML=`<div class="unit"><span class="num">${p(d)}</span><span class="lbl">дн</span></div><div class="sep">:</div><div class="unit"><span class="num">${p(h)}</span><span class="lbl">ч</span></div><div class="sep">:</div><div class="unit"><span class="num">${p(m)}</span><span class="lbl">мин</span></div><div class="sep">:</div><div class="unit"><span class="num">${p(sc)}</span><span class="lbl">сек</span></div>`}tick();banTimerInterval=setInterval(tick,1000)}
+function showBanScreen(){const bs=document.getElementById('ban-screen');document.getElementById('ban-reason-text').textContent=banData?banData.reason:'Нарушение правил';document.getElementById('ban-nick-text').textContent=banData?banData.nickname:'—';let tt='—';if(banData){if(banData.unit==='forever')tt='НАВСЕГДА';else if(banData.unit){const mp={minutes:'мин',hours:'ч',days:'дн',years:'г'};tt=`${banData.duration} ${mp[banData.unit]||''}`}else tt=`${banData.duration} ч`}document.getElementById('ban-time-text').textContent=tt;bs.classList.add('show');document.getElementById('auth-screen').classList.remove('show');document.getElementById('app').classList.remove('show');document.getElementById('loading-screen').classList.add('hidden');startBanTimer();setTimeout(bindAppealToggle,100)}
+document.getElementById('ban-logout-btn')?.addEventListener('click',()=>{if(banTimerInterval)clearInterval(banTimerInterval);document.getElementById('ban-screen').classList.remove('show');document.getElementById('auth-screen').classList.add('show');document.getElementById('app').classList.remove('show');document.getElementById('auth-username').value='';document.getElementById('auth-password').value='';document.getElementById('auth-error').classList.remove('show');clearSession();currentUser=null});
+document.getElementById('logout-btn')?.addEventListener('click',()=>{if(!confirm('Выйти?'))return;clearSession();currentUser=null;document.getElementById('app').classList.remove('show');document.getElementById('auth-screen').classList.add('show');document.getElementById('auth-username').value='';document.getElementById('auth-password').value='';document.getElementById('auth-error').classList.remove('show')});
+window.addEventListener('beforeunload',()=>{saveUsers();if(currentUser)saveSession(currentUser)});
+function bindAppealToggle(){const b=document.getElementById('appeal-toggle-btn'),f=document.getElementById('appeal-form');if(!b||!f)return;const nb=b.cloneNode(true);b.parentNode.replaceChild(nb,b);nb.addEventListener('click',e=>{e.preventDefault();if(f.classList.contains('show')){f.classList.remove('show');nb.textContent='📝 Подать апелляцию'}else{f.classList.add('show');nb.textContent='✖ Скрыть'}})}
+document.getElementById('appeal-text')?.addEventListener('input',function(){$('appeal-char-count').textContent=this.value.length;$('appeal-error').classList.remove('show')});
+document.getElementById('screenshot-drop')?.addEventListener('click',()=>$('screenshot-input').click());
+document.getElementById('screenshot-input')?.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;if(!f.type.startsWith('image/')){alert('❌ Только изображения!');return}if(f.size>2*1024*1024){alert('❌ >2 МБ!');return}const r=new FileReader();r.onload=ev=>{pendingScreenshot=ev.target.result;$('screenshot-img').src=ev.target.result;$('screenshot-preview').classList.add('show');$('screenshot-drop').style.display='none'};r.readAsDataURL(f)});
+document.getElementById('screenshot-remove')?.addEventListener('click',e=>{e.stopPropagation();pendingScreenshot=null;$('screenshot-img').src='';$('screenshot-preview').classList.remove('show');$('screenshot-drop').style.display='block';$('screenshot-input').value=''});
+document.getElementById('appeal-submit-btn')?.addEventListener('click',()=>{const t=$('appeal-text').value.trim();if(t.length<20){$('appeal-error').textContent='❌ Минимум 20';$('appeal-error').classList.add('show');return}const ap=JSON.parse(localStorage.getItem(LS_APPEALS)||'[]');const n=banData?.nickname||'—';if(ap.find(a=>a.nick===n&&a.status==='pending')){$('appeal-error').textContent='⏳ Уже есть';$('appeal-error').classList.add('show');return}ap.push({id:Date.now(),nick:n,reason:banData?.reason||'Нарушение правил',text:t,screenshot:pendingScreenshot,time:new Date().toLocaleString('ru-RU'),timestamp:Date.now(),status:'pending'});localStorage.setItem(LS_APPEALS,JSON.stringify(ap));$('appeal-form').classList.remove('show');$('appeal-toggle-btn').style.display='none';$('appeal-success').classList.add('show');$('appeal-text').value='';pendingScreenshot=null;$('screenshot-img').src='';$('screenshot-preview').classList.remove('show');$('screenshot-drop').style.display='block'});
+function renderFriends(){const bl=document.getElementById('bots-list');if(bl){bl.innerHTML='';BOTS.forEach(b=>{const it=document.createElement('div');it.className='friend-item';it.innerHTML=`<div class="friend-avatar bot">${b.emoji}</div><div class="friend-info"><div class="friend-name">${b.name} <span class="friend-tag ${b.tag}">${b.tagText}</span></div><div class="friend-status">${b.desc}</div></div>`;it.addEventListener('click',()=>openChat(b.id,b.name,true));bl.appendChild(it)})}const pl=document.getElementById('players-list');if(pl){pl.innerHTML='';const f=($('friend-search')?.value||'').toLowerCase();const players=Object.keys(USERS).filter(n=>n!==currentUser&&n.toLowerCase().includes(f));if(players.length===0){pl.innerHTML='<div class="admin-empty">Никого</div>'}else{players.forEach(n=>{const it=document.createElement('div');it.className='friend-item';it.innerHTML=`<div class="friend-avatar">${n.charAt(0).toUpperCase()}</div><div class="friend-info"><div class="friend-name">${getNickWithBadge(n)}</div><div class="friend-status">○ офлайн</div></div>`;it.addEventListener('click',()=>openChat(n,n,false));pl.appendChild(it)})}}}
+document.addEventListener('input',e=>{if(e.target.id==='friend-search')renderFriends()});
+function censorText(t){let r=t;CHAT_BAD_WORDS.forEach(w=>{const rx=new RegExp(w,'gi');r=r.replace(rx,m=>'#'.repeat(m.length))});return r}
+function openChat(id,name,isBot){currentChat={id,name,isBot};$('chat-title').textContent=(isBot?'🤖 ':'👤 ')+name;$('page-friends').style.display='none';$('page-chat').style.display='block';renderChat()}
+function closeChat(){currentChat=null;$('page-chat').style.display='none';$('page-friends').style.display='block'}
+function renderChat(){const c=$('chat-messages');if(!c||!currentChat)return;const k=currentChat.id;const m=chatHistory[k]||[];c.innerHTML='';if(m.length===0){c.innerHTML='<div style="text-align:center;color:#8899aa;font-size:12px;padding:20px;">Пока нет сообщений</div>'}else{m.forEach(msg=>{const d=document.createElement('div');d.className='chat-msg '+(msg.from==='me'?'me':'them');d.innerHTML=`${escapeHtml(censorText(msg.text))}<span class="time">${msg.time}</span>`;c.appendChild(d)})}c.scrollTop=c.scrollHeight}
+function sendChatMessage(){if(!currentChat)return;const i=$('chat-input');const t=i.value.trim();if(!t)return;if(t.length>300){alert('❌ Максимум 300');return}const lt=t.toLowerCase().trim().replace(/[?!.,]+$/g,'').trim();if(FLIRT_PHRASES.some(p=>lt===p.toLowerCase())){alert('🚫 Подкаты запрещены!');i.value='';return}const k=currentChat.id;if(!chatHistory[k])chatHistory[k]=[];chatHistory[k].push({from:'me',text:t,time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})});i.value='';renderChat()}
+document.getElementById('chat-send')?.addEventListener('click',sendChatMessage);
+document.getElementById('chat-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChatMessage()});
+function needTerms(){if(!currentUser)return false;return localStorage.getItem('zyblox_terms_'+currentUser)!=='accepted'}
+document.getElementById('terms-box')?.addEventListener('click',()=>{const cb=$('terms-checkbox');cb.checked=!cb.checked;const bx=$('terms-box'),bt=$('terms-accept-btn');if(cb.checked){bx.style.color='white';bx.style.background='#6bcb77';bx.style.borderColor='#6bcb77';bt.disabled=false;bt.style.opacity='1'}else{bx.style.color='transparent';bx.style.background='transparent';bx.style.borderColor='#445566';bt.disabled=true;bt.style.opacity='0.4'}});
+document.getElementById('terms-accept-btn')?.addEventListener('click',()=>{if(!currentUser)return;localStorage.setItem('zyblox_terms_'+currentUser,'accepted');$('terms-overlay').classList.remove('show')});
+document.getElementById('terms-cancel-btn')?.addEventListener('click',()=>$('terms-overlay').classList.remove('show'));
+document.addEventListener('click',e=>{const fb=e.target.closest('[data-page="friends"]');if(fb&&currentUser&&needTerms()){e.preventDefault();e.stopPropagation();$('terms-overlay').classList.add('show');$('terms-checkbox').checked=false;$('terms-box').style.color='transparent';$('terms-box').style.background='transparent';$('terms-accept-btn').disabled=true;$('terms-accept-btn').style.opacity='0.4'}},true);
+setInterval(()=>{const ap=document.getElementById('page-admin');if(ap&&ap.style.display!=='none'&&isUserAdmin(currentUser)){renderAdminAppeals();renderAdminUsers($('admin-user-search')?.value||'');renderVerifyRequests()}},5000);
+console.log('🟥 Zyblox 2004 v2 готов!');
+console.log('👤 Админы: Owner / admin');
+</script>
+</body>
+</html>
